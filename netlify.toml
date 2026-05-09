@@ -1,0 +1,12 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[dev]
+  command = "echo 'Static site'"
+  publish = "public"
+  port = 8888
+  targetPort = 3999

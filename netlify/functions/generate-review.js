@@ -25,9 +25,14 @@ exports.handler = async function (event, context) {
   try {
     const body = JSON.parse(event.body);
     const lang = body.language || "ja";
-    const menuTexts = (body.menus || []).map(m => MASTER.menus[m][lang]).filter(Boolean);
+    const selectedMenuIds = body.menus || [];
+    const menuTexts = selectedMenuIds.map(m => MASTER.menus[m][lang]).filter(Boolean);
     const pointTexts = (body.points || []).map(p => MASTER.points[p][lang]).filter(Boolean);
     const freeText = body.freeText || "";
+
+    // ★ スキンフェード(m2)が選ばれているかでMEOキーワードを動的に変更
+    const hasSkinFade = selectedMenuIds.includes("m2");
+    const cutKeyword = hasSkinFade ? "フェード" : "カット";
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -43,7 +48,7 @@ exports.handler = async function (event, context) {
 
     if (lang === "ja") {
       systemPrompt += `
-    ・MEO対策として「二条」「理容室」「フェード」という言葉を、文脈に合わせて自然に1回ずつ混ぜてください。
+    ・MEO対策として「二条」「理容室」「${cutKeyword}」という言葉を、文脈に合わせて自然に1回ずつ混ぜてください。
       `;
     }
 

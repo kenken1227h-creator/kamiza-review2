@@ -8,16 +8,19 @@
   :root { --bg-color: #121212; --text-color: #f5f5f5; --accent-color: #d4af37; --box-bg: #242424; }
   body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
   .container { max-width: 500px; width: 100%; background-color: var(--box-bg); padding: 30px; border-radius: 8px; }
+  /* 言語切り替えボタンのデザイン */
+  .lang-switch { text-align: right; margin-bottom: 20px; }
+  .lang-switch select { background: #fff; color: #333; border: 1px solid #ccc; padding: 8px 12px; border-radius: 20px; font-size: 16px; cursor: pointer; outline: none; font-weight: bold;}
   h1 { text-align: center; color: var(--accent-color); letter-spacing: 2px; }
   p.subtitle { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 30px; }
   .form-group { margin-bottom: 25px; }
   label.section-title { display: block; font-weight: bold; margin-bottom: 12px; color: var(--accent-color); border-bottom: 1px solid #444; padding-bottom: 5px; }
   .options { display: flex; flex-wrap: wrap; gap: 10px; }
-  .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; }
+  .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; user-select: none; }
   .option-btn.selected { background-color: var(--accent-color); color: #121212; font-weight: bold; }
-  textarea { width: 100%; background-color: #333; border: 1px solid #555; color: #fff; padding: 15px; border-radius: 4px; box-sizing: border-box; min-height: 80px; }
-  .generate-btn { width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; }
-  .generate-btn:disabled { background-color: #555; }
+  textarea { width: 100%; background-color: #333; border: 1px solid #555; color: #fff; padding: 15px; border-radius: 4px; box-sizing: border-box; min-height: 80px; font-family: inherit; }
+  .generate-btn { width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.3s; }
+  .generate-btn:disabled { background-color: #555; cursor: not-allowed;}
   .result-area { display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #555; }
   .copy-btn { width: 100%; background-color: var(--accent-color); color: #121212; border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 15px; cursor: pointer; }
 </style>
@@ -25,57 +28,89 @@
 <body>
 
 <div class="container">
-  <h1>BAR BER SHOP 髪座</h1>
-  <p class="subtitle">サービス向上のためのアンケート</p>
+  <div class="lang-switch">
+    <select id="langSelect" onchange="changeLanguage()">
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="zh_cn">🇨🇳 简体中文</option>
+      <option value="zh_tw">🇹🇼 繁體中文</option>
+    </select>
+  </div>
+
+  <h1 id="shopName">BAR BER SHOP 髪座</h1>
+  <p class="subtitle" id="subtitle">サービス向上のためのアンケート</p>
 
   <div class="form-group">
-    <label class="section-title">1. 本日のメニューは？</label>
+    <label class="section-title" id="q_menu_title">1. 本日のメニューは？</label>
     <div class="options" id="menuOptions"></div>
   </div>
 
   <div class="form-group">
-    <label class="section-title">2. 具体的に良かった点は？</label>
+    <label class="section-title" id="q_point_title">2. 具体的に良かった点は？</label>
     <div class="options" id="pointOptions"></div>
   </div>
 
   <div class="form-group">
-    <label class="section-title">3. 一言感想（任意）</label>
+    <label class="section-title" id="q_free_title">3. 一言感想（任意）</label>
     <textarea id="freeText" placeholder="例：また来ます！"></textarea>
   </div>
 
   <button class="generate-btn" id="generateBtn" onclick="generateReview()">口コミの文章を作成する</button>
 
   <div class="result-area" id="resultArea">
-    <label class="section-title">完成した文章</label>
+    <label class="section-title" id="res_title">完成した文章</label>
     <textarea id="finalReview" style="min-height: 120px;"></textarea>
-    <button class="copy-btn" onclick="copyAndOpenMap()">📋 コピーしてGoogleマップを開く</button>
+    <button class="copy-btn" id="copyBtn" onclick="copyAndOpenMap()">📋 コピーしてGoogleマップを開く</button>
   </div>
 </div>
 
 <script>
   const GOOGLE_MAP_URL = "https://g.page/r/CTkk8QIPLQt4EBM/review";
+
   const menus = [
-    { id: "m1", name: "メンズカット" }, { id: "m2", name: "スキンフェード" },
-    { id: "m3", name: "カラー" }, { id: "m4", name: "パーマ" },
-    { id: "m5", name: "メッシュ" }, { id: "m6", name: "濡れパン" }
+    { id: "m1", ja: "メンズカット", en: "Men's Cut", ko: "남성 커트", zh_cn: "男士剪发", zh_tw: "男士剪髮" },
+    { id: "m2", ja: "スキンフェード", en: "Skin Fade", ko: "스킨 페이드", zh_cn: "渐变理发", zh_tw: "漸層理髮" },
+    { id: "m3", ja: "カラー", en: "Color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
+    { id: "m4", ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
+    { id: "m5", ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
+    { id: "m6", ja: "濡れパン", en: "Wet Punch", ko: "젖은 펀치 파마", zh_cn: "湿发感烫", zh_tw: "濕髮感燙" }
   ];
+  
   const points = [
-    { id: "p1", name: "丁寧なカウンセリング" }, { id: "p2", name: "イメージ通りの仕上がり" },
-    { id: "p3", name: "手際の良さ" }, { id: "p4", name: "話しやすい雰囲気" },
-    { id: "p5", name: "駅からの近さ" }, { id: "p6", name: "渋くて落ち着く内装" },
-    { id: "p7", name: "シャンプーが快適" }
+    { id: "p1", ja: "丁寧なカウンセリング", en: "Careful counseling", ko: "꼼꼼한 상담", zh_cn: "细致的咨询", zh_tw: "仔細的諮詢" },
+    { id: "p2", ja: "イメージ通りの仕上がり", en: "Finish as imagined", ko: "원하던 스타일 완성", zh_cn: "符合预期的效果", zh_tw: "符合預期的效果" },
+    { id: "p3", ja: "手際の良さ", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
+    { id: "p4", ja: "話しやすい雰囲気", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
+    { id: "p5", ja: "駅からの近さ", en: "Close to the station", ko: "역에서 가까움", zh_cn: "离车站近", zh_tw: "離車站近" },
+    { id: "p6", ja: "渋くて落ち着く内装", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
+    { id: "p7", ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
   ];
+
+  const uiText = {
+    ja: { sub: "サービス向上のためのアンケート", q_menu: "1. 本日のメニューは？", q_point: "2. 具体的に良かった点は？", q_free: "3. 一言感想（任意）", ph: "例：また来ます！", btn: "口コミの文章を作成する", res: "完成した文章", copy: "📋 コピーしてGoogleマップを開く", loading: "生成中...", error: "生成に失敗しました。", copied: "コピーしました！Googleマップに貼り付けてください。" },
+    en: { sub: "Questionnaire to improve our service", q_menu: "1. Today's Menu?", q_point: "2. What did you like?", q_free: "3. Comments (Optional)", ph: "ex: I'll come back!", btn: "Generate Review", res: "Generated Review", copy: "📋 Copy & Open Google Maps", loading: "Generating...", error: "Failed to generate.", copied: "Copied! Please paste it on Google Maps." },
+    ko: { sub: "서비스 향상을 위한 설문조사", q_menu: "1. 오늘의 메뉴는?", q_point: "2. 좋았던 점은?", q_free: "3. 한마디 (선택)", ph: "예: 또 올게요!", btn: "리뷰 작성하기", res: "완성된 리뷰", copy: "📋 복사 후 Google 지도 열기", loading: "생성 중...", error: "생성에 실패했습니다.", copied: "복사되었습니다! Google 지도에 붙여넣어 주세요." },
+    zh_cn: { sub: "服务提升问卷", q_menu: "1. 今天的项目是？", q_point: "2. 满意的地方是？", q_free: "3. 留言（选填）", ph: "例：下次还会来！", btn: "生成评价", res: "生成的评价", copy: "📋 复制并打开Google地图", loading: "生成中...", error: "生成失败。", copied: "已复制！请粘贴到Google地图。" },
+    zh_tw: { sub: "服務提升問卷", q_menu: "1. 今天的項目是？", q_point: "2. 滿意的地方是？", q_free: "3. 留言（選填）", ph: "例：下次還會來！", btn: "生成評價", res: "生成的評價", copy: "📋 複製並打開Google地圖", loading: "生成中...", error: "生成失敗。", copied: "已複製！請貼上到Google地圖。" }
+  };
 
   let selectedMenus = [];
   let selectedPoints = [];
+  let currentLang = "ja";
 
   function renderOptions() {
+    document.getElementById("menuOptions").innerHTML = "";
+    document.getElementById("pointOptions").innerHTML = "";
+
     menus.forEach(m => {
-      const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = m.name;
+      const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = m[currentLang];
+      if(selectedMenus.find(x => x.id === m.id)) btn.classList.add("selected");
       btn.onclick = () => toggleSelect(btn, selectedMenus, m); document.getElementById("menuOptions").appendChild(btn);
     });
     points.forEach(p => {
-      const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = p.name;
+      const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = p[currentLang];
+      if(selectedPoints.find(x => x.id === p.id)) btn.classList.add("selected");
       btn.onclick = () => toggleSelect(btn, selectedPoints, p); document.getElementById("pointOptions").appendChild(btn);
     });
   }
@@ -86,12 +121,29 @@
     if (index === -1) array.push(item); else array.splice(index, 1);
   }
 
+  function changeLanguage() {
+    currentLang = document.getElementById("langSelect").value;
+    const ui = uiText[currentLang];
+    
+    document.getElementById("subtitle").innerText = ui.sub;
+    document.getElementById("q_menu_title").innerText = ui.q_menu;
+    document.getElementById("q_point_title").innerText = ui.q_point;
+    document.getElementById("q_free_title").innerText = ui.q_free;
+    document.getElementById("freeText").placeholder = ui.ph;
+    document.getElementById("generateBtn").innerText = ui.btn;
+    document.getElementById("res_title").innerText = ui.res;
+    document.getElementById("copyBtn").innerText = ui.copy;
+    
+    renderOptions();
+  }
+
   async function generateReview() {
     const generateBtn = document.getElementById("generateBtn");
     generateBtn.disabled = true;
-    generateBtn.innerText = "生成中...";
+    generateBtn.innerText = uiText[currentLang].loading;
 
     const payload = {
+      language: currentLang,
       menus: selectedMenus.map(m => m.id),
       points: selectedPoints.map(p => p.id),
       freeText: document.getElementById("freeText").value.trim(),
@@ -103,26 +155,30 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const { review } = await res.json();
-      document.getElementById("finalReview").value = review;
+      const data = await res.json();
+      if(data.error) throw new Error(data.error);
+      
+      document.getElementById("finalReview").value = data.review;
       document.getElementById("resultArea").style.display = "block";
     } catch (err) {
-      alert("生成に失敗しました。");
+      alert(uiText[currentLang].error);
     } finally {
       generateBtn.disabled = false;
-      generateBtn.innerText = "口コミの文章を作成する";
+      generateBtn.innerText = uiText[currentLang].btn;
     }
   }
 
   function copyAndOpenMap() {
     const text = document.getElementById("finalReview").value;
     navigator.clipboard.writeText(text).then(() => {
-      alert("コピーしました！Googleマップに貼り付けてください。");
+      alert(uiText[currentLang].copied);
       window.location.href = GOOGLE_MAP_URL;
     });
   }
 
-  window.onload = renderOptions;
+  window.onload = () => {
+    changeLanguage();
+  };
 </script>
 </body>
 </html>

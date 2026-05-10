@@ -22,7 +22,6 @@ const MASTER = {
 
 exports.handler = async function (event, context) {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
-
   try {
     const body = JSON.parse(event.body);
     const lang = body.language || "ja";
@@ -32,38 +31,27 @@ exports.handler = async function (event, context) {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // AIへの指示書
     let systemPrompt = `
-    あなたは理容室「BAR BER SHOP 髪座」の常連客、または新規客として自然な口コミを書くガイドです。
+    あなたは理容室「BAR BER SHOP 髪座」の客として自然な口コミを書くガイドです。
     必ず指定された言語（${lang}）で出力してください。
 
     【重要：誇張の禁止】
     ・「最高すぎる」「感動の嵐」のような大げさな表現は絶対に避けてください。
     ・「良かった」「満足」「また行きたい」程度の、落ち着いた大人のトーンで書いてください。
-    ・サクラやAIだと思われないよう、淡々と事実を述べるスタイルが好ましいです。
-    ・箇条書きは使わず、自然な文章にしてください。
+    ・サクラやAIだと思われないよう、淡々と事実を述べるスタイルにしてください。
     `;
 
-    // 日本語の場合のみ、MEO対策キーワードを狙う
     if (lang === "ja") {
       systemPrompt += `
-    ・MEO対策として「二条」「理容室」「フェード」という言葉を、不自然にならないように文脈に合わせて自然に混ぜてください（無理に全て入れなくてもよい）。
+    ・MEO対策として「二条」「理容室」「フェード」という言葉を、文脈に合わせて自然に1回ずつ混ぜてください。
       `;
     }
 
-    const userPrompt = `
-    条件：
-    ・メニュー：${menuTexts.join(", ")}
-    ・良かった点：${pointTexts.join(", ")}
-    ・自由記述：${freeText}
-    `;
+    const userPrompt = `メニュー：${menuTexts.join(", ")}\n良かった点：${pointTexts.join(", ")}\n自由記述：${freeText}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
+      messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
       temperature: 0.7,
     });
 

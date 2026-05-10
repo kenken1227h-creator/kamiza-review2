@@ -3,24 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BAR BER SHOP 髪座 - ご来店アンケート</title>
+<title>BAR BER SHOP 髪座 - 口コミ生成</title>
 <style>
   :root { --bg-color: #121212; --text-color: #f5f5f5; --accent-color: #d4af37; --box-bg: #242424; }
   body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
-  .container { max-width: 500px; width: 100%; background-color: var(--box-bg); padding: 30px; border-radius: 8px; }
-  /* 言語切り替えボタンのデザイン */
+  .container { max-width: 500px; width: 100%; background-color: var(--box-bg); padding: 30px; border-radius: 8px; position: relative; }
+  
+  /* 言語切り替え：白地の丸いボタン（画像のデザインを再現） */
   .lang-switch { text-align: right; margin-bottom: 20px; }
-  .lang-switch select { background: #fff; color: #333; border: 1px solid #ccc; padding: 8px 12px; border-radius: 20px; font-size: 16px; cursor: pointer; outline: none; font-weight: bold;}
-  h1 { text-align: center; color: var(--accent-color); letter-spacing: 2px; }
+  .lang-switch select { 
+    background: #fff; color: #333; border: 1px solid #ccc; padding: 6px 12px; 
+    border-radius: 20px; font-size: 15px; cursor: pointer; font-weight: bold; outline: none;
+    appearance: none; -webkit-appearance: none;
+  }
+
+  h1 { text-align: center; color: var(--accent-color); letter-spacing: 2px; margin-top: 0; }
   p.subtitle { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 30px; }
   .form-group { margin-bottom: 25px; }
   label.section-title { display: block; font-weight: bold; margin-bottom: 12px; color: var(--accent-color); border-bottom: 1px solid #444; padding-bottom: 5px; }
   .options { display: flex; flex-wrap: wrap; gap: 10px; }
-  .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; user-select: none; }
+  .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; }
   .option-btn.selected { background-color: var(--accent-color); color: #121212; font-weight: bold; }
   textarea { width: 100%; background-color: #333; border: 1px solid #555; color: #fff; padding: 15px; border-radius: 4px; box-sizing: border-box; min-height: 80px; font-family: inherit; }
-  .generate-btn { width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-  .generate-btn:disabled { background-color: #555; cursor: not-allowed;}
+  
+  .generate-btn { width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+  .generate-btn:disabled { background-color: #555; }
+  
   .result-area { display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #555; }
   .copy-btn { width: 100%; background-color: var(--accent-color); color: #121212; border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 15px; cursor: pointer; }
 </style>
@@ -88,11 +96,11 @@
   ];
 
   const uiText = {
-    ja: { sub: "サービス向上のためのアンケート", q_menu: "1. 本日のメニューは？", q_point: "2. 具体的に良かった点は？", q_free: "3. 一言感想（任意）", ph: "例：また来ます！", btn: "口コミの文章を作成する", res: "完成した文章", copy: "📋 コピーしてGoogleマップを開く", loading: "生成中...", error: "生成に失敗しました。", copied: "コピーしました！Googleマップに貼り付けてください。" },
-    en: { sub: "Questionnaire to improve our service", q_menu: "1. Today's Menu?", q_point: "2. What did you like?", q_free: "3. Comments (Optional)", ph: "ex: I'll come back!", btn: "Generate Review", res: "Generated Review", copy: "📋 Copy & Open Google Maps", loading: "Generating...", error: "Failed to generate.", copied: "Copied! Please paste it on Google Maps." },
-    ko: { sub: "서비스 향상을 위한 설문조사", q_menu: "1. 오늘의 메뉴는?", q_point: "2. 좋았던 점은?", q_free: "3. 한마디 (선택)", ph: "예: 또 올게요!", btn: "리뷰 작성하기", res: "완성된 리뷰", copy: "📋 복사 후 Google 지도 열기", loading: "생성 중...", error: "생성에 실패했습니다.", copied: "복사되었습니다! Google 지도에 붙여넣어 주세요." },
-    zh_cn: { sub: "服务提升问卷", q_menu: "1. 今天的项目是？", q_point: "2. 满意的地方是？", q_free: "3. 留言（选填）", ph: "例：下次还会来！", btn: "生成评价", res: "生成的评价", copy: "📋 复制并打开Google地图", loading: "生成中...", error: "生成失败。", copied: "已复制！请粘贴到Google地图。" },
-    zh_tw: { sub: "服務提升問卷", q_menu: "1. 今天的項目是？", q_point: "2. 滿意的地方是？", q_free: "3. 留言（選填）", ph: "例：下次還會來！", btn: "生成評價", res: "生成的評價", copy: "📋 複製並打開Google地圖", loading: "生成中...", error: "生成失敗。", copied: "已複製！請貼上到Google地圖。" }
+    ja: { sub: "サービス向上のためのアンケート", q_menu: "1. 本日のメニューは？", q_point: "2. 具体的に良かった点は？", q_free: "3. 一言感想（任意）", ph: "例：また来ます！", btn: "口コミの文章を作成する", res: "完成した文章", copy: "📋 コピーしてGoogleマップを開く", loading: "生成中...", error: "失敗しました。", copied: "コピーしました！" },
+    en: { sub: "Customer Satisfaction Survey", q_menu: "1. Today's Menu?", q_point: "2. What did you like?", q_free: "3. Comments (Optional)", ph: "ex: I'll come back!", btn: "Generate Review", res: "Generated Review", copy: "📋 Copy & Open Google Maps", loading: "Generating...", error: "Failed.", copied: "Copied!" },
+    ko: { sub: "서비스 향상을 위한 설문조사", q_menu: "1. 오늘의 메뉴는?", q_point: "2. 좋았던 점은?", q_free: "3. 한마디 (선택)", ph: "예: 또 올게요!", btn: "리뷰 작성하기", res: "완성된 리뷰", copy: "📋 복사 후 Google 지도 열기", loading: "생성 중...", error: "실패했습니다.", copied: "복사되었습니다!" },
+    zh_cn: { sub: "服务满意度调查", q_menu: "1. 今天的项目？", q_point: "2. 满意的地方？", q_free: "3. 留言（选填）", ph: "例：下次还会来！", btn: "生成评价", res: "生成的评价", copy: "📋 复制并打开Google地图", loading: "生成中...", error: "失败。", copied: "已复制！" },
+    zh_tw: { sub: "服務滿意度調查", q_menu: "1. 今天的項目？", q_point: "2. 滿意的地方？", q_free: "3. 留言（選填）", ph: "例：下次還會來！", btn: "生成評價", res: "生成的評價", copy: "📋 複製並打開Google地圖", loading: "生成中...", error: "失敗。", copied: "已複製！" }
   };
 
   let selectedMenus = [];
@@ -102,7 +110,6 @@
   function renderOptions() {
     document.getElementById("menuOptions").innerHTML = "";
     document.getElementById("pointOptions").innerHTML = "";
-
     menus.forEach(m => {
       const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = m[currentLang];
       if(selectedMenus.find(x => x.id === m.id)) btn.classList.add("selected");
@@ -124,7 +131,6 @@
   function changeLanguage() {
     currentLang = document.getElementById("langSelect").value;
     const ui = uiText[currentLang];
-    
     document.getElementById("subtitle").innerText = ui.sub;
     document.getElementById("q_menu_title").innerText = ui.q_menu;
     document.getElementById("q_point_title").innerText = ui.q_point;
@@ -133,7 +139,6 @@
     document.getElementById("generateBtn").innerText = ui.btn;
     document.getElementById("res_title").innerText = ui.res;
     document.getElementById("copyBtn").innerText = ui.copy;
-    
     renderOptions();
   }
 
@@ -156,8 +161,6 @@
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if(data.error) throw new Error(data.error);
-      
       document.getElementById("finalReview").value = data.review;
       document.getElementById("resultArea").style.display = "block";
     } catch (err) {
@@ -176,9 +179,7 @@
     });
   }
 
-  window.onload = () => {
-    changeLanguage();
-  };
+  window.onload = changeLanguage;
 </script>
 </body>
 </html>

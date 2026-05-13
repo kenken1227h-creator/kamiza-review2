@@ -30,34 +30,48 @@ exports.handler = async function (event, context) {
     const pointTexts = (body.points || []).map(p => MASTER.points[p][lang]).filter(Boolean);
     const freeText = body.freeText || "";
 
-    // ★ スキンフェード(m2)が選ばれているかでMEOキーワードを動的に変更
+    // スキンフェード(m2)が選ばれているかでMEOキーワードを動的に変更
     const hasSkinFade = selectedMenuIds.includes("m2");
     const cutKeyword = hasSkinFade ? "フェード" : "カット";
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+    // AIへの指示（プロンプト）
     let systemPrompt = `
-    あなたは理容室「BAR BER SHOP 髪座」の客として自然な口コミを書くガイドです。
-    必ず指定された言語（${lang}）で出力してください。
+    あなたは理容室のリアルな顧客として、Googleマップに投稿する自然な口コミを作成します。
+    指定された言語（${lang}）で出力してください。
 
-    【重要：誇張の禁止】
-    ・「最高すぎる」「感動の嵐」のような大げさな表現は絶対に避けてください。
-    ・「良かった」「満足」「また行きたい」程度の、落ち着いた大人のトーンで書いてください。
-    ・サクラやAIだと思われないよう、淡々と事実を述べるスタイルにしてください。
+    【絶対的なルール（AIっぽさを完全に消すこと）】
+    ・「結論として」「まとめると」「特筆すべき点は」「〜にお伺いしました」などの、AI特有の堅苦しい表現は絶対に使用禁止です。
+    ・箇条書きは禁止です。一つの自然な文章の流れとして書いてください。
+    ・実際の人間がスマホでパッと打ったような、少しラフでリアルな温度感のある文章にしてください。
+    ・短くてスパッとした文（例：「とても良いバーバーでした。」「ご丁寧で気持ちいい。」）や、少し感情的な文（例：「想像以上の仕上がりに嬉しかったです。」）を混ぜてリアルさを出してください。
     `;
 
+    // 日本語の場合のMEO対策＆トーン
     if (lang === "ja") {
       systemPrompt += `
-    ・MEO対策として「二条」「理容室」「${cutKeyword}」という言葉を、文脈に合わせて自然に1回ずつ混ぜてください。
+    ・MEO対策として「二条」か「大宮」の地名と、「理容室」「${cutKeyword}」を文章に含めてください。
+    ・【超重要】地名やキーワードは検索対策っぽくならないよう、極めて自然に溶け込ませてください。
+      例：「二条で${cutKeyword}の上手い理容室を探していて…」
+      例：「大宮エリアにある歴史のありそうな理容室です。」
+      例：「京都に来たので二条の理容室でお願いしました。」
+      `;
+    } 
+    // 外国語の場合のトーン（旅行者風）
+    else {
+      systemPrompt += `
+    ・海外からの旅行者が日本（京都）を訪れて、素晴らしい体験をしたときのトーンで書いてください。
+    ・少し感動を表現したり、「京都に来たらまた行きます」「日本で最高の技術でした」といったフレンドリーな内容を含めると自然です。
       `;
     }
 
-    const userPrompt = `メニュー：${menuTexts.join(", ")}\n良かった点：${pointTexts.join(", ")}\n自由記述：${freeText}`;
+    const userPrompt = `メニュー：${menuTexts.join(", ")}\n良かった点：${pointTexts.join(", ")}\n自由記述：${freeText}\n\nこの条件で、本物の人間が書いたような自然な口コミを生成してください。`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-      temperature: 0.7,
+      temperature: 0.8, // 数値を少し上げて、より人間らしい表現のブレ（多様性）を作ります
     });
 
     return {

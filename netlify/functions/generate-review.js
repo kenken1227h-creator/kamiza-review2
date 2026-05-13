@@ -51,7 +51,7 @@ exports.handler = async function (event, context) {
     // 日本語の場合のMEO対策＆トーン
     if (lang === "ja") {
       systemPrompt += `
-    ・MEO対策として「二条」か「大宮」の地名と、「理容室」「${cutKeyword}」を文章に含めてください。
+    ・MEO対策として二条か大宮の地名と、理容室「${cutKeyword}」を文章に含めてください。
     ・【超重要】地名やキーワードは検索対策っぽくならないよう、極めて自然に溶け込ませてください。
       例：「二条で${cutKeyword}の上手い理容室を探していて…」
       例：「大宮エリアにある歴史のありそうな理容室です。」

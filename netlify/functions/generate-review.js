@@ -42,6 +42,7 @@ exports.handler = async function (event, context) {
     指定された言語（${lang}）で出力してください。
 
     【絶対的なルール（AIっぽさを完全に消すこと）】
+    ・店名（BAR BER SHOP 髪座、髪座など）を書く際、「」や『』などの括弧は絶対に使用しないでください。
     ・「結論として」「まとめると」「特筆すべき点は」「〜にお伺いしました」などの、AI特有の堅苦しい表現は絶対に使用禁止です。
     ・箇条書きは禁止です。一つの自然な文章の流れとして書いてください。
     ・実際の人間がスマホでパッと打ったような、少しラフでリアルな温度感のある文章にしてください。
@@ -51,7 +52,7 @@ exports.handler = async function (event, context) {
     // 日本語の場合のMEO対策＆トーン
     if (lang === "ja") {
       systemPrompt += `
-    ・MEO対策として二条か大宮の地名と、理容室「${cutKeyword}」を文章に含めてください。
+    ・MEO対策として「二条」か「大宮」の地名と、「理容室」「${cutKeyword}」を文章に含めてください。
     ・【超重要】地名やキーワードは検索対策っぽくならないよう、極めて自然に溶け込ませてください。
       例：「二条で${cutKeyword}の上手い理容室を探していて…」
       例：「大宮エリアにある歴史のありそうな理容室です。」
@@ -71,7 +72,7 @@ exports.handler = async function (event, context) {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-      temperature: 0.8, // 数値を少し上げて、より人間らしい表現のブレ（多様性）を作ります
+      temperature: 0.8,
     });
 
     return {

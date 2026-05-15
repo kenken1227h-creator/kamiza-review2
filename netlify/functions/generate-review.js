@@ -321,7 +321,13 @@ exports.handler = async (event) => {
       max_tokens: 600,
     });
 
-    const review = (completion.choices[0]?.message?.content || "").trim();
+    let review = (completion.choices[0]?.message?.content || "").trim();
+
+    // AIが勝手につけた括弧をプログラムで強制的に削除する
+    review = review.replace(/「BAR BER SHOP 髪座」/g, "BAR BER SHOP 髪座");
+    review = review.replace(/『BAR BER SHOP 髪座』/g, "BAR BER SHOP 髪座");
+    review = review.replace(/「髪座」/g, "髪座");
+    review = review.replace(/『髪座』/g, "髪座");
 
     if (!review) {
       throw new Error("Empty completion");

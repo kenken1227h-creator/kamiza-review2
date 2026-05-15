@@ -1,185 +1,431 @@
+// netlify/functions/generate-review.js
+// 髪座 口コミ生成エンドポイント
+// POST /.netlify/functions/generate-review
+
 const OpenAI = require("openai");
 
+// ===== 設定 =====
+// 本番デプロイ時は自店のドメインに置き換える（例: "https://kamiza.example.com"）
+// ローカル開発と Netlify プレビューも許可したい場合は配列で複数指定可
+const ALLOWED_ORIGINS = [
+  "https://your-site.netlify.app",       // ← 本番ドメインに変更
+  "http://localhost:8888",                // netlify dev
+  "http://127.0.0.1:8888",
+];
+
+const MAX_FREETEXT_LENGTH = 200;          // 自由記述の最大文字数
+
+// ===== マスタデータ（フロントの id と一致させる）=====
 const MASTER = {
-  menus: {
-    m1: { ja: "メンズカット", en: "Men's Cut", ko: "남성 커트", zh_cn: "男士剪发", zh_tw: "男士剪髮" },
-    m2: { ja: "スキンフェード", en: "Skin Fade", ko: "스킨 페이드", zh_cn: "渐变理发", zh_tw: "漸層理髮" },
-    m3: { ja: "カラー", en: "Color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
-    m4: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
-    m5: { ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
-    m6: { ja: "濡れパン", en: "Wet Punch", ko: "젖은 펀치 파마", zh_cn: "湿发感烫", zh_tw: "濕髮感燙" }
+  ja: {
+    shopName: "BAR BER SHOP 髪座",
+    shopDesc: "京都・二条駅／大宮駅から徒歩圏の理容室",
+    frequencies: { first: "初めての来店", repeat: "リピーター（2回目以降）" },
+    emotions: {
+      e1: "技術力の高さ",
+      e2: "店内の雰囲気と居心地の良さ",
+      e3: "手際の良さとスピーディーさ",
+    },
+    menus: {
+      m1: "メンズカット", m2: "スキンフェード", m3: "カラー",
+      m4: "パーマ", m5: "メッシュ", m6: "濡れパン（ウェットなパンチパーマ）",
+    },
+    points: {
+      p1: "髪の悩みを丁寧に聞いて似合うスタイルを提案してくれた",
+      p2: "イメージ通りの完璧な仕上がりだった",
+      p3: "丁寧かつ手際よくスピーディーに仕上げてくれた",
+      p4: "会話も楽しくとても居心地の良い時間を過ごせた",
+      p5: "二条駅・大宮駅から近くて通いやすい",
+      p6: "店内の雰囲気が渋くて落ち着く",
+      p7: "京都で一番カッコよくなった",
+      p8: "シャンプーがとても気持ちよかった",
+    },
+    endings: {
+      styleA: "大満足",
+      styleB: "最高（高めの熱量）",
+      styleC: "とても良かった（落ち着いた満足感）",
+    },
   },
-  points: {
-    p1: { ja: "カウンセリングが丁寧", en: "Careful counseling", ko: "꼼꼼한 상담", zh_cn: "细致的咨询", zh_tw: "仔細的諮詢" },
-    p2: { ja: "希望通りの仕上がり", en: "Finish as imagined", ko: "원하던 스타일 완성", zh_cn: "符合预期的效果", zh_tw: "符合預期的效果" },
-    p3: { ja: "手際が良くスピーディー", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
-    p4: { ja: "落ち着いた接客", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
-    p5: { ja: "二条駅・大宮駅からのアクセスが良い", en: "Close to Nijo/Omiya station", ko: "니조역/오미야역에서 가까움", zh_cn: "离二条站/大宫站近", zh_tw: "離二條站/大宮站近" },
-    p6: { ja: "渋くてかっこいい店の雰囲気", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
-    p7: { ja: "シャンプーが気持ちいい", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
-  }
+  en: {
+    shopName: "BAR BER SHOP Kamiza",
+    shopDesc: "a barbershop in Kyoto, near Nijo and Omiya stations",
+    frequencies: { first: "first visit", repeat: "returning customer" },
+    emotions: {
+      e1: "the high level of technique",
+      e2: "the atmosphere and comfort of the shop",
+      e3: "the efficiency and speed of the service",
+    },
+    menus: {
+      m1: "men's cut", m2: "skin fade", m3: "hair color",
+      m4: "perm", m5: "highlights", m6: "wet punch perm",
+    },
+    points: {
+      p1: "they carefully listened to my hair concerns and suggested a style that suited me",
+      p2: "the finish was exactly as I imagined",
+      p3: "they were thorough yet fast and efficient",
+      p4: "the conversation was enjoyable and the time spent was very comfortable",
+      p5: "it is conveniently located near Nijo and Omiya stations",
+      p6: "the shop has a cool, relaxing atmosphere",
+      p7: "it made me feel like the coolest guy in Kyoto",
+      p8: "the shampoo felt amazing",
+    },
+    endings: {
+      styleA: "highly satisfied",
+      styleB: "absolutely awesome (strong enthusiasm)",
+      styleC: "very good (calm, sincere satisfaction)",
+    },
+  },
+  zh_tw: {
+    shopName: "BAR BER SHOP 髪座",
+    shopDesc: "位於京都二條站／大宮站附近的理髮店",
+    frequencies: { first: "第一次造訪", repeat: "回頭客（第二次以上）" },
+    emotions: {
+      e1: "高超的技術",
+      e2: "店內氛圍與舒適度",
+      e3: "俐落迅速的手法",
+    },
+    menus: {
+      m1: "男士剪髮", m2: "漸層理髮(Skin Fade)", m3: "染髮",
+      m4: "燙髮", m5: "挑染", m6: "濕髮感燙",
+    },
+    points: {
+      p1: "仔細聆聽頭髮困擾並推薦適合的造型",
+      p2: "完全符合想像的完美造型",
+      p3: "服務仔細且手法俐落迅速",
+      p4: "聊天愉快，度過非常舒適的時光",
+      p5: "離二條站和大宮站很近，非常方便",
+      p6: "店內氛圍復古舒適",
+      p7: "變成京都最帥的造型",
+      p8: "洗髮非常舒服",
+    },
+    endings: {
+      styleA: "非常滿意",
+      styleB: "太棒了（高度熱情）",
+      styleC: "非常好（沉穩的滿足感）",
+    },
+  },
+  ko: {
+    shopName: "BAR BER SHOP 카미자",
+    shopDesc: "교토 니조역・오미야역 근처의 이용실",
+    frequencies: { first: "첫 방문", repeat: "재방문(2회 이상)" },
+    emotions: {
+      e1: "높은 기술력",
+      e2: "매장 분위기와 편안함",
+      e3: "능숙함과 빠른 시술",
+    },
+    menus: {
+      m1: "남성 커트", m2: "스킨 페이드", m3: "컬러",
+      m4: "파마", m5: "메쉬", m6: "젖은 펀치 파마",
+    },
+    points: {
+      p1: "모발 고민을 꼼꼼히 듣고 어울리는 스타일을 제안해 주셨다",
+      p2: "생각했던 그대로 완벽하게 완성되었다",
+      p3: "꼼꼼하면서도 능숙하고 빠르게 마무리해 주셨다",
+      p4: "대화도 즐겁고 편안한 시간을 보낼 수 있었다",
+      p5: "니조역과 오미야역에서 가까워 다니기 편하다",
+      p6: "매장 분위기가 차분하고 멋지다",
+      p7: "교토에서 가장 멋지게 변신할 수 있었다",
+      p8: "샴푸가 시원하고 기분 좋았다",
+    },
+    endings: {
+      styleA: "대만족",
+      styleB: "최고(강한 열정)",
+      styleC: "정말 좋았다(차분한 만족감)",
+    },
+  },
+  zh_cn: {
+    shopName: "BAR BER SHOP 髪座",
+    shopDesc: "位于京都二条站／大宫站附近的理发店",
+    frequencies: { first: "第一次到访", repeat: "回头客（第二次以上）" },
+    emotions: {
+      e1: "高超的技术",
+      e2: "店内氛围与舒适度",
+      e3: "利落迅速的手法",
+    },
+    menus: {
+      m1: "男士剪发", m2: "渐变理发(Skin Fade)", m3: "染发",
+      m4: "烫发", m5: "挑染", m6: "湿发感烫",
+    },
+    points: {
+      p1: "仔细倾听头发困扰并推荐适合的造型",
+      p2: "完全符合想象的完美造型",
+      p3: "服务仔细且手法利落迅速",
+      p4: "聊天愉快，度过非常舒适的时光",
+      p5: "离二条站和大宫站很近，非常方便",
+      p6: "店内氛围复古舒适",
+      p7: "变成京都最帅的造型",
+      p8: "洗发非常舒服",
+    },
+    endings: {
+      styleA: "非常满意",
+      styleB: "太棒了（高度热情）",
+      styleC: "非常好（沉稳的满足感）",
+    },
+  },
 };
 
-// ===== 言語ごとのシステムプロンプト（必ずその言語自身で書く）=====
-function buildSystemPrompt(lang, hasSkinFade) {
-  const cutKeyword = hasSkinFade ? "フェード" : "カット";
+// ===== System Prompt（言語別）=====
+const SYSTEM_PROMPTS = {
+  ja: `あなたは京都の理容室を訪れた一般のお客様として、Googleマップに投稿する自然な口コミを書きます。
 
-  if (lang === "ja") {
-    return `あなたは京都の理容室「髪座」を実際に利用したリアルな顧客として、Googleマップに投稿する自然な口コミを日本語で作成します。
+【絶対ルール】
+- 200〜350文字程度の自然な日本語
+- AIが書いたと気づかれない、口語的で人間味のある文体
+- 提示された情報のみを基に書く（事実を捏造しない）
+- 過度な絵文字や記号は使わない
+- 改行は2〜4回程度、適度に入れる
+- 毎回必ず異なる文章構成・語彙・語順で書く（テンプレ感を完全排除）
+- 不自然な敬語の連発や、宣伝臭い表現は避ける
+- 出力はレビュー本文のみ。前置きや「以下が口コミです」などの説明文は一切不要`,
 
-【絶対ルール（AIっぽさを完全に消す）】
-・出力は必ず日本語のみ。他の言語は一切混ぜない。
-・店名（BAR BER SHOP 髪座、髪座など）に「」『』""''などの括弧類は絶対に使わない。
-・「結論として」「まとめると」「特筆すべき点は」「〜にお伺いしました」等のAI特有の堅い表現は禁止。
-・箇条書き禁止。自然な文章の流れで書く。
-・実際の人間がスマホでパッと打ったような、少しラフでリアルな温度感にする。
-・短くスパッとした文（例：とても良いバーバーでした。 ご丁寧で気持ちいい。）や、少し感情的な文（例：想像以上の仕上がりに嬉しかったです。）を混ぜてリアルさを出す。
+  en: `You write natural Google Maps reviews as a real customer of a barbershop in Kyoto, Japan.
 
-【MEO対策】
-・「二条」か「大宮」のどちらかの地名と、「理容室」「${cutKeyword}」を文中に必ず含める。
-・地名やキーワードは検索対策臭くならないよう、極めて自然に文章へ溶け込ませる。
-  例：二条で${cutKeyword}の上手い理容室を探していて…
-  例：大宮エリアにある歴史のありそうな理容室です。
-  例：京都に来たので二条の理容室でお願いしました。
+[Strict rules]
+- 80–150 words, natural English
+- Sound like a real human, not AI-generated
+- Use only the facts provided (do not invent details)
+- No excessive emojis or salesy language
+- Vary sentence structure and vocabulary every time
+- Output the review body only — no preamble`,
 
-口コミ本文のみを出力すること。前置きや見出し、注釈は一切不要。`;
+  zh_tw: `你是一位實際造訪了京都理髮店的顧客，正在撰寫要發布在 Google 地圖上的自然評論。
+
+【嚴格規則】
+- 約 150–250 字的自然繁體中文
+- 像真人寫的，而非 AI 生成
+- 只根據提供的事實撰寫（不可捏造）
+- 避免過多表情符號或廣告口吻
+- 每次都改變句型、詞彙、順序
+- 只輸出評論本文，不要任何前言`,
+
+  ko: `당신은 교토의 이용실을 실제로 방문한 손님으로서, 구글 지도에 올릴 자연스러운 리뷰를 작성합니다.
+
+【엄격한 규칙】
+- 200~350자 정도의 자연스러운 한국어
+- AI가 쓴 것처럼 보이지 않게, 진짜 사람 같은 문체
+- 제공된 사실만으로 작성(꾸며내지 않음)
+- 과한 이모지나 광고성 표현 금지
+- 매번 문장 구조·어휘·순서를 다르게
+- 리뷰 본문만 출력(서두·설명 불필요)`,
+
+  zh_cn: `你是一位实际造访了京都理发店的顾客，正在撰写要发布在 Google 地图上的自然评论。
+
+【严格规则】
+- 约 150–250 字的自然简体中文
+- 像真人写的，而非 AI 生成
+- 只根据提供的事实撰写（不可捏造）
+- 避免过多表情符号或广告口吻
+- 每次都改变句型、词汇、顺序
+- 只输出评论本文，不要任何前言`,
+};
+
+// ===== ハンドラ本体 =====
+exports.handler = async (event) => {
+  // --- CORS / Origin チェック ---
+  const origin = event.headers.origin || event.headers.Origin || "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json",
+  };
+
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: corsHeaders, body: "" };
   }
 
-  if (lang === "en") {
-    return `You are a real customer of "Kamiza" — a barbershop in Kyoto, Japan — writing a natural Google Maps review.
-
-[Strict rules — output must NOT feel AI-generated]
-- Output ONLY in English. Never mix in Japanese, Korean, Chinese, or any other language.
-- When you mention the shop name (BAR BER SHOP Kamiza, or just Kamiza), do NOT wrap it in any kind of brackets such as 「」『』 "" ''.
-- Avoid stiff, AI-like phrases such as "In conclusion", "To summarize", "It is worth noting that", "Furthermore".
-- No bullet points. Write as one or two natural flowing paragraphs.
-- Sound like a real person who just tapped this out on their phone — a little casual, with genuine warmth.
-- Mix short punchy sentences (e.g. "Such a great barber.", "Super friendly and skilled.") with slightly emotional ones (e.g. "Honestly thrilled with how it turned out.").
-
-[Tone]
-- Write as an international tourist who visited Kyoto and had a great experience.
-- Friendly phrases like "I'll definitely come back next time I'm in Kyoto" or "Best barber experience I've had in Japan" feel natural and welcome.
-
-Output the review body only. No preamble, no headings, no notes.`;
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Method Not Allowed" }),
+    };
   }
 
-  if (lang === "ko") {
-    return `당신은 일본 교토에 있는 이용실 "카미자(髪座)"의 실제 고객으로서, 구글 지도에 올릴 자연스러운 리뷰를 한국어로 작성합니다.
-
-[엄수 규칙 — AI 느낌을 완전히 없앨 것]
-- 반드시 한국어로만 출력하세요. 일본어, 영어, 중국어 등 다른 언어를 절대 섞지 마세요.
-- 매장명(BAR BER SHOP 髪座, 카미자 등)에 「」『』 "" '' 같은 괄호류를 절대 사용하지 마세요.
-- "결론적으로", "정리하자면", "특히 주목할 점은", "더 나아가" 같은 AI 특유의 딱딱한 표현은 금지.
-- 글머리 기호(불릿) 금지. 한두 문단의 자연스러운 흐름으로 쓰세요.
-- 진짜 사람이 휴대폰으로 막 입력한 듯한, 약간 캐주얼하고 따뜻한 온도감을 살리세요.
-- 짧고 단호한 문장(예: 정말 좋은 바버샵이에요. 친절하고 손도 빨라요.)과 약간 감정적인 문장(예: 생각보다 훨씬 잘 잘라주셔서 기뻤어요.)을 섞으세요.
-
-[톤]
-- 한국에서 교토로 여행 온 관광객의 톤으로 쓰세요.
-- "다음에 교토 오면 또 갈게요", "일본에서 받은 커트 중 최고였어요" 같은 친근한 표현이 자연스럽습니다.
-
-리뷰 본문만 출력하세요. 서두, 제목, 주석은 일절 쓰지 마세요.`;
+  // 本番では他ドメインからの呼び出しを拒否
+  if (!ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      statusCode: 403,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Forbidden origin" }),
+    };
   }
 
-  if (lang === "zh_tw") {
-    return `你是日本京都某理髮店「髪座（Kamiza）」的真實顧客，正在用繁體中文撰寫要發布在 Google 地圖上的自然評論。
-
-【嚴格規則 — 完全消除 AI 感】
-- 必須只用繁體中文輸出。絕對不要混入日文、英文、簡體中文等其他語言。
-- 提到店名（BAR BER SHOP 髪座、髪座等）時，絕對不要用「」『』 "" '' 等任何括號包起來。
-- 禁止使用「綜上所述」「總結來說」「值得一提的是」「此外」等 AI 特有的生硬表達。
-- 禁止條列式。請以一兩段自然流暢的文字書寫。
-- 寫得像真人在手機上隨手打字的感覺，帶點口語、有真實溫度。
-- 混合短而俐落的句子（例：真的是很棒的理髮店。又親切又專業。）和略帶情感的句子（例：成品比想像中還滿意，超開心。）。
-
-【語氣】
-- 以從台灣或香港來京都旅遊的旅客口吻撰寫。
-- 「下次來京都還會再去」「在日本剪過最好的一次」這類表達很自然。
-
-只輸出評論本文，不要任何前言、標題或註解。`;
-  }
-
-  // zh_cn
-  return `你是日本京都某理发店"髪座（Kamiza）"的真实顾客，正在用简体中文撰写要发布在 Google 地图上的自然评论。
-
-【严格规则 — 完全消除 AI 感】
-- 必须只用简体中文输出。绝对不要混入日文、英文、繁体中文等其他语言。
-- 提到店名（BAR BER SHOP 髪座、髪座等）时，绝对不要用「」『』 "" '' 等任何括号包起来。
-- 禁止使用"综上所述""总结来说""值得一提的是""此外"等 AI 特有的生硬表达。
-- 禁止条列式。请以一两段自然流畅的文字书写。
-- 写得像真人在手机上随手打字的感觉，带点口语、有真实温度。
-- 混合短而利落的句子（例：真的是很棒的理发店。又亲切又专业。）和略带情感的句子（例：成品比想象中还满意，超开心。）。
-
-【语气】
-- 以从中国大陆来京都旅游的旅客口吻撰写。
-- "下次来京都还会再去""在日本剪过最好的一次"这类表达很自然。
-
-只输出评论本文，不要任何前言、标题或注释。`;
-}
-
-// ===== 言語ごとのユーザープロンプト（ラベルもその言語にする）=====
-function buildUserPrompt(lang, menuTexts, pointTexts, freeText) {
-  const L = {
-    ja:    { menu: "メニュー",       point: "良かった点",          free: "お客様自身の言葉", dash: "（特になし）",
-             outro: "上記の情報のみを根拠に、本物の人間が書いたような自然で温度感のある日本語の口コミを1つ作成してください。" },
-    en:    { menu: "Services",       point: "What I liked",         free: "Customer's own words", dash: "(none)",
-             outro: "Using only the info above, write ONE natural English review that sounds like a real human wrote it on their phone." },
-    ko:    { menu: "받은 서비스",     point: "좋았던 점",            free: "손님의 직접적인 말", dash: "(없음)",
-             outro: "위 정보만을 근거로, 실제 사람이 휴대폰으로 쓴 듯한 자연스러운 한국어 리뷰를 한 편 작성해 주세요." },
-    zh_tw: { menu: "服務項目",       point: "覺得不錯的地方",       free: "顧客自己的話",     dash: "（無）",
-             outro: "請僅根據以上資訊，撰寫一則像真人在手機上隨手打的自然繁體中文評論。" },
-    zh_cn: { menu: "服务项目",       point: "觉得不错的地方",       free: "顾客自己的话",     dash: "（无）",
-             outro: "请仅根据以上信息，撰写一则像真人在手机上随手打的自然简体中文评论。" },
-  }[lang] || (() => { throw new Error("unsupported lang"); })();
-
-  return `${L.menu}: ${menuTexts.length ? menuTexts.join(", ") : L.dash}
-${L.point}: ${pointTexts.length ? pointTexts.join(", ") : L.dash}
-${L.free}: ${freeText && freeText.trim() ? freeText.trim() : L.dash}
-
-${L.outro}`;
-}
-
-exports.handler = async function (event, context) {
-  if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
-
+  // --- 入力パース ---
+  let payload;
   try {
-    const body = JSON.parse(event.body || "{}");
-    const lang = ["ja", "en", "ko", "zh_tw", "zh_cn"].includes(body.language) ? body.language : "ja";
-    const selectedMenuIds = Array.isArray(body.menus) ? body.menus : [];
-    const selectedPointIds = Array.isArray(body.points) ? body.points : [];
+    payload = JSON.parse(event.body || "{}");
+  } catch {
+    return {
+      statusCode: 400,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Invalid JSON" }),
+    };
+  }
 
-    const menuTexts = selectedMenuIds
-      .map(id => MASTER.menus[id] && MASTER.menus[id][lang])
-      .filter(Boolean);
-    const pointTexts = selectedPointIds
-      .map(id => MASTER.points[id] && MASTER.points[id][lang])
-      .filter(Boolean);
-    const freeText = typeof body.freeText === "string" ? body.freeText.slice(0, 300) : "";
+  const {
+    language = "ja",
+    frequency,
+    emotion,
+    menus = [],
+    points = [],
+    ending,
+    freeText = "",
+  } = payload;
 
-    const hasSkinFade = selectedMenuIds.includes("m2");
+  // --- 入力検証 ---
+  const m = MASTER[language];
+  if (!m) {
+    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "Unsupported language" }) };
+  }
+  if (!emotion || !m.emotions[emotion]) {
+    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "emotion is required" }) };
+  }
+  if (!ending || !m.endings[ending]) {
+    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: "ending is required" }) };
+  }
+  if (typeof freeText !== "string" || freeText.length > MAX_FREETEXT_LENGTH) {
+    return {
+      statusCode: 400,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: `freeText must be <= ${MAX_FREETEXT_LENGTH} chars` }),
+    };
+  }
 
+  // 自由記述のサニタイズ（プロンプトインジェクション対策の最低限）
+  const safeFreeText = freeText
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[<>]/g, "")
+    .slice(0, MAX_FREETEXT_LENGTH);
+
+  // --- User Prompt 構築 ---
+  const menuLabels = menus.map((id) => m.menus[id]).filter(Boolean);
+  const pointLabels = points.map((id) => m.points[id]).filter(Boolean);
+
+  const userPrompt = buildUserPrompt(language, m, {
+    frequency: m.frequencies[frequency] || m.frequencies.first,
+    emotion: m.emotions[emotion],
+    menuLabels,
+    pointLabels,
+    ending: m.endings[ending],
+    freeText: safeFreeText,
+  });
+
+  // --- OpenAI 呼び出し ---
+  try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const systemPrompt = buildSystemPrompt(lang, hasSkinFade);
-    const userPrompt = buildUserPrompt(lang, menuTexts, pointTexts, freeText);
-
-    const response = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: SYSTEM_PROMPTS[language] || SYSTEM_PROMPTS.ja },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.8,
-      max_tokens: 600,
+      temperature: 0.95,        // 高めにして毎回違う文章に
+      top_p: 0.95,
+      presence_penalty: 0.6,
+      frequency_penalty: 0.3,
+      max_tokens: 600,           // 1件あたりのコスト上限
     });
+
+    const review = (completion.choices[0]?.message?.content || "").trim();
+
+    if (!review) {
+      throw new Error("Empty completion");
+    }
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ review: response.choices[0].message.content.trim() }),
+      headers: corsHeaders,
+      body: JSON.stringify({ review }),
     };
-  } catch (error) {
-    console.error(error);
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+  } catch (err) {
+    console.error("OpenAI error:", err);
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Generation failed", detail: String(err?.message || err) }),
+    };
   }
 };
+
+// ===== User Prompt ビルダ =====
+function buildUserPrompt(lang, m, data) {
+  const { frequency, emotion, menuLabels, pointLabels, ending, freeText } = data;
+
+  if (lang === "ja") {
+    return `以下の情報を基に、自然なGoogleマップ口コミを1つ書いてください。
+
+■ お店：${m.shopName}（${m.shopDesc}）
+■ 来店：${frequency}
+■ 最も感動したポイント：${emotion}
+■ 受けたメニュー：${menuLabels.length ? menuLabels.join("、") : "（指定なし。一般的な来店として書いてOK）"}
+■ 特に良かった点：
+${pointLabels.length ? pointLabels.map((p) => `  ・${p}`).join("\n") : "  ・（指定なし）"}
+■ 締めくくりのトーン：${ending}
+${freeText ? `■ お客様自身の言葉（必ず文中に自然に取り込む）：「${freeText}」` : ""}
+
+口コミ本文のみを出力してください。`;
+  }
+
+  if (lang === "en") {
+    return `Write one natural Google Maps review based on the information below.
+
+- Shop: ${m.shopName} (${m.shopDesc})
+- Visit: ${frequency}
+- Most impressive point: ${emotion}
+- Services received: ${menuLabels.length ? menuLabels.join(", ") : "(unspecified, write as a general visit)"}
+- What was particularly good:
+${pointLabels.length ? pointLabels.map((p) => `  - ${p}`).join("\n") : "  - (unspecified)"}
+- Closing tone: ${ending}
+${freeText ? `- Customer's own words (incorporate naturally): "${freeText}"` : ""}
+
+Output only the review body.`;
+  }
+
+  if (lang === "zh_tw") {
+    return `請根據以下資訊，撰寫一則自然的 Google 地圖評論。
+
+‧ 店家：${m.shopName}（${m.shopDesc}）
+‧ 造訪：${frequency}
+‧ 最感動的部分：${emotion}
+‧ 接受的服務：${menuLabels.length ? menuLabels.join("、") : "（未指定，請以一般造訪撰寫）"}
+‧ 特別好的地方：
+${pointLabels.length ? pointLabels.map((p) => `  ・${p}`).join("\n") : "  ・（未指定）"}
+‧ 結尾語氣：${ending}
+${freeText ? `‧ 顧客自己的話（請自然融入文中）：「${freeText}」` : ""}
+
+請只輸出評論本文。`;
+  }
+
+  if (lang === "ko") {
+    return `아래 정보를 바탕으로 자연스러운 구글 지도 리뷰 한 편을 작성해 주세요.
+
+· 매장: ${m.shopName}(${m.shopDesc})
+· 방문: ${frequency}
+· 가장 감동한 포인트: ${emotion}
+· 받은 서비스: ${menuLabels.length ? menuLabels.join(", ") : "(미지정, 일반적인 방문으로 작성)"}
+· 특히 좋았던 점:
+${pointLabels.length ? pointLabels.map((p) => `  · ${p}`).join("\n") : "  · (미지정)"}
+· 마무리 톤: ${ending}
+${freeText ? `· 손님 본인의 말(자연스럽게 본문에 포함): "${freeText}"` : ""}
+
+리뷰 본문만 출력하세요.`;
+  }
+
+  // zh_cn
+  return `请根据以下信息，撰写一则自然的 Google 地图评论。
+
+‧ 店家：${m.shopName}（${m.shopDesc}）
+‧ 到访：${frequency}
+‧ 最感动的部分：${emotion}
+‧ 接受的服务：${menuLabels.length ? menuLabels.join("、") : "（未指定，请以一般到访撰写）"}
+‧ 特别好的地方：
+${pointLabels.length ? pointLabels.map((p) => `  ・${p}`).join("\n") : "  ・（未指定）"}
+‧ 结尾语气：${ending}
+${freeText ? `‧ 顾客自己的话（请自然融入文中）：“${freeText}”` : ""}
+
+请只输出评论本文。`;
+}

@@ -8,13 +8,8 @@
   :root { --bg-color: #121212; --text-color: #f5f5f5; --accent-color: #d4af37; --box-bg: #242424; }
   body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
   .container { max-width: 500px; width: 100%; background-color: var(--box-bg); padding: 30px; border-radius: 8px; }
-
-  /* シンプルな言語切り替え */
   .lang-switch { text-align: right; margin-bottom: 20px; }
-  .lang-switch select {
-    background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px;
-    border-radius: 4px; font-size: 14px; cursor: pointer; outline: none;
-  }
+  .lang-switch select { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; font-size: 14px; cursor: pointer; outline: none; }
   h1 { text-align: center; color: var(--accent-color); letter-spacing: 2px; margin-top: 0; }
   p.subtitle { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 30px; }
   .form-group { margin-bottom: 25px; }
@@ -23,15 +18,14 @@
   .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; }
   .option-btn.selected { background-color: var(--accent-color); color: #121212; font-weight: bold; }
   textarea { width: 100%; background-color: #333; border: 1px solid #555; color: #fff; padding: 15px; border-radius: 4px; box-sizing: border-box; min-height: 80px; font-family: inherit; }
-
   .generate-btn { width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-  .generate-btn:disabled { background-color: #555; cursor: not-allowed; }
-
+  .generate-btn:disabled { background-color: #555; }
   .result-area { display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #555; }
   .copy-btn { width: 100%; background-color: var(--accent-color); color: #121212; border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 15px; cursor: pointer; }
 </style>
 </head>
 <body>
+
 <div class="container">
   <div class="lang-switch">
     <select id="langSelect" onchange="changeLanguage()">
@@ -42,6 +36,7 @@
       <option value="zh_tw">繁體中文</option>
     </select>
   </div>
+
   <h1 id="shopName">BAR BER SHOP 髪座</h1>
   <p class="subtitle" id="subtitle">サービス向上のためのアンケート</p>
 
@@ -70,104 +65,78 @@
 </div>
 
 <script>
-  // ===== 設定 =====
   const GOOGLE_MAP_URL = "https://g.page/r/CTkk8QIPLQt4EBM/review";
 
-  // ===== マスタデータ（id は Netlify Functions 側と一致させること）=====
   const menus = [
-    { id: "m1", ja: "メンズカット",   en: "Men's Cut",  ko: "남성 커트",       zh_cn: "男士剪发",   zh_tw: "男士剪髮" },
-    { id: "m2", ja: "スキンフェード", en: "Skin Fade",  ko: "스킨 페이드",     zh_cn: "渐变理发",   zh_tw: "漸層理髮" },
-    { id: "m3", ja: "カラー",         en: "Color",      ko: "컬러",            zh_cn: "染发",       zh_tw: "染髮" },
-    { id: "m4", ja: "パーマ",         en: "Perm",       ko: "파마",            zh_cn: "烫发",       zh_tw: "燙髮" },
-    { id: "m5", ja: "メッシュ",       en: "Highlights", ko: "메쉬",            zh_cn: "挑染",       zh_tw: "挑染" },
-    { id: "m6", ja: "濡れパン",       en: "Wet Punch",  ko: "젖은 펀치 파마",  zh_cn: "湿发感烫",   zh_tw: "濕髮感燙" }
+    { id: "m1", ja: "メンズカット", en: "Men's Cut", ko: "남성 커트", zh_cn: "男士剪发", zh_tw: "男士剪髮" },
+    { id: "m2", ja: "スキンフェード", en: "Skin Fade", ko: "스킨 페이드", zh_cn: "渐变理发", zh_tw: "漸層理髮" },
+    { id: "m3", ja: "カラー", en: "Color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
+    { id: "m4", ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
+    { id: "m5", ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
+    { id: "m6", ja: "濡れパン", en: "Wet Punch", ko: "젖은 펀치 파마", zh_cn: "湿发感烫", zh_tw: "濕髮感燙" }
   ];
-
+  
   const points = [
-    { id: "p1", ja: "丁寧なカウンセリング",     en: "Careful counseling",        ko: "꼼꼼한 상담",        zh_cn: "细致的咨询",       zh_tw: "仔細的諮詢" },
-    { id: "p2", ja: "イメージ通りの仕上がり",   en: "Finish as imagined",        ko: "원하던 스타일 완성", zh_cn: "符合预期的效果",   zh_tw: "符合預期的效果" },
-    { id: "p3", ja: "手際の良さ",               en: "Efficiency",                ko: "빠르고 능숙함",      zh_cn: "手法娴熟",         zh_tw: "手法俐落" },
-    { id: "p4", ja: "話しやすい雰囲気",         en: "Friendly atmosphere",       ko: "편안한 분위기",      zh_cn: "轻松的氛围",       zh_tw: "輕鬆的氛圍" },
-    { id: "p5", ja: "駅からの近さ",             en: "Close to the station",      ko: "역에서 가까움",      zh_cn: "离车站近",         zh_tw: "離車站近" },
-    { id: "p6", ja: "渋くて落ち着く内装",       en: "Cool & relaxing interior",  ko: "멋진 인테리어",      zh_cn: "复古舒适的内饰",   zh_tw: "復古舒適的裝潢" },
-    { id: "p7", ja: "シャンプーが快適",         en: "Comfortable shampoo",       ko: "시원한 샴푸",        zh_cn: "舒适的洗发",       zh_tw: "舒服的洗髮" }
+    { id: "p1", ja: "丁寧なカウンセリング", en: "Careful counseling", ko: "꼼꼼한 상담", zh_cn: "细致的咨询", zh_tw: "仔細的諮詢" },
+    { id: "p2", ja: "希望通りの仕上がり", en: "Finish as imagined", ko: "원하던 스타일 완성", zh_cn: "符合预期的效果", zh_tw: "符合預期的效果" },
+    { id: "p3", ja: "手際が良くスピーディー", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
+    { id: "p4", ja: "落ち着いた接客", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
+    { id: "p5", ja: "二条駅・大宮駅からのアクセスが良い", en: "Close to Nijo/Omiya station", ko: "니조역/오미야역에서 가까움", zh_cn: "离二条站/大宫站近", zh_tw: "離二條站/大宮站近" },
+    { id: "p6", ja: "渋くてかっこいい店の雰囲気", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
+    { id: "p7", ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
   ];
 
-  // ===== UIテキスト =====
   const uiText = {
-    ja:    { sub: "サービス向上のためのアンケート", q_menu: "1. 本日のメニューは？", q_point: "2. 具体的に良かった点は？", q_free: "3. 一言感想（任意）", ph: "例：また来ます！",      btn: "口コミの文章を作成する", res: "完成した文章",     copy: "📋 コピーしてGoogleマップを開く", loading: "生成中...",      error: "失敗しました。時間をおいてもう一度お試しください。", copied: "コピーしました！", needSelect: "メニューか良かった点を最低1つは選んでください。" },
-    en:    { sub: "Customer Satisfaction Survey",  q_menu: "1. Today's Menu?",       q_point: "2. What did you like?",      q_free: "3. Comments (Optional)", ph: "ex: I'll come back!",  btn: "Generate Review",         res: "Generated Review",  copy: "📋 Copy & Open Google Maps",         loading: "Generating...",  error: "Something went wrong. Please try again.",            copied: "Copied!",         needSelect: "Please select at least one menu or good point." },
-    ko:    { sub: "서비스 향상을 위한 설문조사",   q_menu: "1. 오늘의 메뉴는?",      q_point: "2. 좋았던 점은?",            q_free: "3. 한마디 (선택)",      ph: "예: 또 올게요!",         btn: "리뷰 작성하기",            res: "완성된 리뷰",       copy: "📋 복사 후 Google 지도 열기",        loading: "생성 중...",      error: "실패했습니다. 잠시 후 다시 시도해 주세요.",            copied: "복사되었습니다!", needSelect: "메뉴 또는 좋았던 점을 최소 1개 선택해 주세요." },
-    zh_cn: { sub: "服务满意度调查",               q_menu: "1. 今天的项目？",        q_point: "2. 满意的地方？",            q_free: "3. 留言（选填）",       ph: "例：下次还会来！",       btn: "生成评价",                 res: "生成的评价",        copy: "📋 复制并打开Google地图",            loading: "生成中...",      error: "生成失败，请稍后再试。",                                copied: "已复制！",        needSelect: "请至少选择一个项目或满意点。" },
-    zh_tw: { sub: "服務滿意度調查",               q_menu: "1. 今天的項目？",        q_point: "2. 滿意的地方？",            q_free: "3. 留言（選填）",       ph: "例：下次還會來！",       btn: "生成評價",                 res: "生成的評價",        copy: "📋 複製並打開Google地圖",            loading: "生成中...",      error: "生成失敗，請稍後再試。",                                copied: "已複製！",        needSelect: "請至少選擇一個項目或滿意點。" }
+    ja: { sub: "サービス向上のためのアンケート", q_menu: "1. 本日のメニューは？", q_point: "2. 具体的に良かった点は？", q_free: "3. 一言感想（任意）", ph: "例：また来ます！", btn: "口コミの文章を作成する", res: "完成した文章", copy: "📋 コピーしてGoogleマップを開く", loading: "生成中...", error: "失敗しました。", copied: "コピーしました！" },
+    en: { sub: "Customer Satisfaction Survey", q_menu: "1. Today's Menu?", q_point: "2. What did you like?", q_free: "3. Comments (Optional)", ph: "ex: I'll come back!", btn: "Generate Review", res: "Generated Review", copy: "📋 Copy & Open Google Maps", loading: "Generating...", error: "Failed.", copied: "Copied!" },
+    ko: { sub: "서비스 향상을 위한 설문조사", q_menu: "1. 오늘의 메뉴는?", q_point: "2. 좋았던 점은?", q_free: "3. 한마디 (선택)", ph: "예: 또 올게요!", btn: "리뷰 작성하기", res: "완성된 리뷰", copy: "📋 복사 후 Google 지도 열기", loading: "생성 중...", error: "실패했습니다.", copied: "복사되었습니다!" },
+    zh_cn: { sub: "服务满意度调查", q_menu: "1. 今天的项目？", q_point: "2. 满意的地方？", q_free: "3. 留言（选填）", ph: "例：下次还会来！", btn: "生成评价", res: "生成的评价", copy: "📋 复制并打开Google地图", loading: "生成中...", error: "失败。", copied: "已复制！" },
+    zh_tw: { sub: "服務滿意度調查", q_menu: "1. 今天的項目？", q_point: "2. 滿意的地方？", q_free: "3. 留言（選填）", ph: "例：下次還會來！", btn: "生成評價", res: "生成的評價", copy: "📋 複製並打開Google地圖", loading: "生成中...", error: "失敗。", copied: "已複製！" }
   };
 
-  // ===== 状態 =====
   let selectedMenus = [];
   let selectedPoints = [];
   let currentLang = "ja";
 
-  // ===== オプション描画 =====
   function renderOptions() {
-    const menuBox = document.getElementById("menuOptions");
-    const pointBox = document.getElementById("pointOptions");
-    menuBox.innerHTML = "";
-    pointBox.innerHTML = "";
-
+    document.getElementById("menuOptions").innerHTML = "";
+    document.getElementById("pointOptions").innerHTML = "";
     menus.forEach(m => {
-      const btn = document.createElement("div");
-      btn.className = "option-btn";
-      btn.innerText = m[currentLang];
-      if (selectedMenus.find(x => x.id === m.id)) btn.classList.add("selected");
-      btn.onclick = () => toggleSelect(btn, selectedMenus, m);
-      menuBox.appendChild(btn);
+      const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = m[currentLang];
+      if(selectedMenus.find(x => x.id === m.id)) btn.classList.add("selected");
+      btn.onclick = () => toggleSelect(btn, selectedMenus, m); document.getElementById("menuOptions").appendChild(btn);
     });
-
     points.forEach(p => {
-      const btn = document.createElement("div");
-      btn.className = "option-btn";
-      btn.innerText = p[currentLang];
-      if (selectedPoints.find(x => x.id === p.id)) btn.classList.add("selected");
-      btn.onclick = () => toggleSelect(btn, selectedPoints, p);
-      pointBox.appendChild(btn);
+      const btn = document.createElement("div"); btn.className = "option-btn"; btn.innerText = p[currentLang];
+      if(selectedPoints.find(x => x.id === p.id)) btn.classList.add("selected");
+      btn.onclick = () => toggleSelect(btn, selectedPoints, p); document.getElementById("pointOptions").appendChild(btn);
     });
   }
 
   function toggleSelect(element, array, item) {
     element.classList.toggle("selected");
     const index = array.findIndex(x => x.id === item.id);
-    if (index === -1) array.push(item);
-    else array.splice(index, 1);
+    if (index === -1) array.push(item); else array.splice(index, 1);
   }
 
-  // ===== 言語切替 =====
   function changeLanguage() {
     currentLang = document.getElementById("langSelect").value;
     const ui = uiText[currentLang];
-    document.getElementById("subtitle").innerText      = ui.sub;
-    document.getElementById("q_menu_title").innerText  = ui.q_menu;
+    document.getElementById("subtitle").innerText = ui.sub;
+    document.getElementById("q_menu_title").innerText = ui.q_menu;
     document.getElementById("q_point_title").innerText = ui.q_point;
-    document.getElementById("q_free_title").innerText  = ui.q_free;
-    document.getElementById("freeText").placeholder    = ui.ph;
-    document.getElementById("generateBtn").innerText   = ui.btn;
-    document.getElementById("res_title").innerText     = ui.res;
-    document.getElementById("copyBtn").innerText       = ui.copy;
+    document.getElementById("q_free_title").innerText = ui.q_free;
+    document.getElementById("freeText").placeholder = ui.ph;
+    document.getElementById("generateBtn").innerText = ui.btn;
+    document.getElementById("res_title").innerText = ui.res;
+    document.getElementById("copyBtn").innerText = ui.copy;
     renderOptions();
   }
 
-  // ===== 口コミ生成 =====
   async function generateReview() {
-    const ui = uiText[currentLang];
-
-    // ★ 修正1：未選択チェック（メニューも良かった点も0個ならブロック）
-    if (selectedMenus.length === 0 && selectedPoints.length === 0) {
-      alert(ui.needSelect);
-      return;
-    }
-
     const generateBtn = document.getElementById("generateBtn");
     generateBtn.disabled = true;
-    generateBtn.innerText = ui.loading;
+    generateBtn.innerText = uiText[currentLang].loading;
 
     const payload = {
       language: currentLang,
@@ -177,44 +146,35 @@
     };
 
     try {
-      const res = await fetch("/.netlify/functions/generate-review", {
+      // ★ ここがVercel用（/api/...）に変わっています
+      const res = await fetch("/api/generate-review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-
-      // ★ 修正2：エラー判定（undefined表示の防止）
-      if (!res.ok || !data.review) {
-        throw new Error(data.error || `HTTP ${res.status}`);
-      }
+      
+      if (!res.ok) throw new Error(data.error || "生成失敗");
 
       document.getElementById("finalReview").value = data.review;
       document.getElementById("resultArea").style.display = "block";
-      // ★ おまけ：結果まで自動スクロール
-      document.getElementById("resultArea").scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       console.error(err);
-      alert(ui.error);
+      alert(uiText[currentLang].error);
     } finally {
       generateBtn.disabled = false;
-      generateBtn.innerText = ui.btn;
+      generateBtn.innerText = uiText[currentLang].btn;
     }
   }
 
-  // ===== コピーしてマップを開く =====
   function copyAndOpenMap() {
     const text = document.getElementById("finalReview").value;
-    if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
       alert(uiText[currentLang].copied);
       window.location.href = GOOGLE_MAP_URL;
-    }).catch(() => {
-      alert("コピーに失敗しました。お手数ですが手動でコピーしてください。");
     });
   }
 
-  // ===== 初期化 =====
   window.onload = changeLanguage;
 </script>
 </body>

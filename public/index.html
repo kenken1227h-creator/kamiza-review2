@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BAR BER SHOP 髪座 - 口コミ生成</title>
+<title>BAR BER SHOP 髪座 - ご来店アンケート</title>
 <style>
   :root { --bg-color: #121212; --text-color: #f5f5f5; --accent-color: #d4af37; --box-bg: #242424; }
   body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
@@ -12,16 +12,29 @@
   .lang-switch select { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; font-size: 14px; cursor: pointer; outline: none; }
   h1 { text-align: center; color: var(--accent-color); letter-spacing: 2px; margin-top: 0; }
   p.subtitle { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 30px; }
+  
   .form-group { margin-bottom: 25px; }
   label.section-title { display: block; font-weight: bold; margin-bottom: 12px; color: var(--accent-color); border-bottom: 1px solid #444; padding-bottom: 5px; }
+  
+  /* 星評価のスタイル */
+  .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; font-size: 35px; }
+  .star-rating input { display: none; }
+  .star-rating label { color: #555; cursor: pointer; transition: 0.2s; }
+  .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: var(--accent-color); }
+
   .options { display: flex; flex-wrap: wrap; gap: 10px; }
   .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; }
   .option-btn.selected { background-color: var(--accent-color); color: #121212; font-weight: bold; }
   textarea { width: 100%; background-color: #333; border: 1px solid #555; color: #fff; padding: 15px; border-radius: 4px; box-sizing: border-box; min-height: 80px; font-family: inherit; }
+  
   .generate-btn { width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
   .generate-btn:disabled { background-color: #555; }
+  
   .result-area { display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #555; }
   .copy-btn { width: 100%; background-color: var(--accent-color); color: #121212; border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 15px; cursor: pointer; }
+  
+  /* サンクスメッセージのスタイル */
+  .thank-you-msg { text-align: center; font-weight: bold; color: var(--accent-color); font-size: 18px; line-height: 1.5; padding: 20px 0; }
 </style>
 </head>
 <body>
@@ -41,26 +54,42 @@
   <p class="subtitle" id="subtitle">サービス向上のためのアンケート</p>
 
   <div class="form-group">
-    <label class="section-title" id="q_menu_title">1. 本日のメニューは？</label>
+    <label class="section-title" id="q_rating_title">1. 本日の総合評価</label>
+    <div class="star-rating">
+      <input type="radio" id="star5" name="rating" value="5" checked><label for="star5">★</label>
+      <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+      <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+      <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+      <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="section-title" id="q_menu_title">2. 本日のメニューは？</label>
     <div class="options" id="menuOptions"></div>
   </div>
 
   <div class="form-group">
-    <label class="section-title" id="q_point_title">2. 具体的に良かった点は？</label>
+    <label class="section-title" id="q_point_title">3. 具体的に良かった点は？</label>
     <div class="options" id="pointOptions"></div>
   </div>
 
   <div class="form-group">
-    <label class="section-title" id="q_free_title">3. 一言感想（任意）</label>
+    <label class="section-title" id="q_free_title">4. 一言感想（任意）</label>
     <textarea id="freeText" placeholder="例：また来ます！"></textarea>
   </div>
 
   <button class="generate-btn" id="generateBtn" onclick="generateReview()">口コミの文章を作成する</button>
 
   <div class="result-area" id="resultArea">
-    <label class="section-title" id="res_title">完成した文章</label>
-    <textarea id="finalReview" style="min-height: 120px;"></textarea>
-    <button class="copy-btn" id="copyBtn" onclick="copyAndOpenMap()">📋 コピーしてGoogleマップを開く</button>
+    <div id="reviewContent" style="display:none;">
+      <label class="section-title" id="res_title">完成した文章</label>
+      <textarea id="finalReview" style="min-height: 120px;"></textarea>
+      <button class="copy-btn" id="copyBtn" onclick="copyAndOpenMap()">📋 コピーしてGoogleマップを開く</button>
+    </div>
+    
+    <div id="thankYouContent" class="thank-you-msg" style="display:none;">
+      </div>
   </div>
 </div>
 
@@ -81,17 +110,17 @@
     { id: "p2", ja: "希望通りの仕上がり", en: "Finish as imagined", ko: "원하던 스타일 완성", zh_cn: "符合预期的效果", zh_tw: "符合預期的效果" },
     { id: "p3", ja: "手際が良くスピーディー", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
     { id: "p4", ja: "落ち着いた接客", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
-    { id: "p5", ja: "二条駅・大宮駅からのアクセスが良い", en: "Close to Nijo/Omiya station", ko: "니조역/오미야역에서 가까움", zh_cn: "离二条站/大宫站近", zh_tw: "離二條站/大宮站近" },
-    { id: "p6", ja: "渋くてかっこいい店の雰囲気", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
+    { id: "p5", ja: "駅からの近さ", en: "Close to the station", ko: "역에서 가까움", zh_cn: "离车站近", zh_tw: "離車站近" },
+    { id: "p6", ja: "渋くて落ち着く内装", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
     { id: "p7", ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
   ];
 
   const uiText = {
-    ja: { sub: "サービス向上のためのアンケート", q_menu: "1. 本日のメニューは？", q_point: "2. 具体的に良かった点は？", q_free: "3. 一言感想（任意）", ph: "例：また来ます！", btn: "口コミの文章を作成する", res: "完成した文章", copy: "📋 コピーしてGoogleマップを開く", loading: "生成中...", error: "失敗しました。", copied: "コピーしました！" },
-    en: { sub: "Customer Satisfaction Survey", q_menu: "1. Today's Menu?", q_point: "2. What did you like?", q_free: "3. Comments (Optional)", ph: "ex: I'll come back!", btn: "Generate Review", res: "Generated Review", copy: "📋 Copy & Open Google Maps", loading: "Generating...", error: "Failed.", copied: "Copied!" },
-    ko: { sub: "서비스 향상을 위한 설문조사", q_menu: "1. 오늘의 메뉴는?", q_point: "2. 좋았던 점은?", q_free: "3. 한마디 (선택)", ph: "예: 또 올게요!", btn: "리뷰 작성하기", res: "완성된 리뷰", copy: "📋 복사 후 Google 지도 열기", loading: "생성 중...", error: "실패했습니다.", copied: "복사되었습니다!" },
-    zh_cn: { sub: "服务满意度调查", q_menu: "1. 今天的项目？", q_point: "2. 满意的地方？", q_free: "3. 留言（选填）", ph: "例：下次还会来！", btn: "生成评价", res: "生成的评价", copy: "📋 复制并打开Google地图", loading: "生成中...", error: "失败。", copied: "已复制！" },
-    zh_tw: { sub: "服務滿意度調查", q_menu: "1. 今天的項目？", q_point: "2. 滿意的地方？", q_free: "3. 留言（選填）", ph: "例：下次還會來！", btn: "生成評價", res: "生成的評價", copy: "📋 複製並打開Google地圖", loading: "生成中...", error: "失敗。", copied: "已複製！" }
+    ja: { sub: "サービス向上のためのアンケート", q_rating: "1. 本日の総合評価", q_menu: "2. 本日のメニューは？", q_point: "3. 具体的に良かった点は？", q_free: "4. 一言感想（任意）", ph: "例：また来ます！", btn: "アンケートを送信する", res: "完成した文章", copy: "📋 コピーしてGoogleマップを開く", loading: "処理中...", error: "失敗しました。", copied: "コピーしました！", thanks: "貴重なご意見ありがとうございました。<br>今後のサービス改善に役立てさせていただきます。" },
+    en: { sub: "Customer Satisfaction Survey", q_rating: "1. Overall Rating", q_menu: "2. Today's Menu?", q_point: "3. What did you like?", q_free: "4. Comments (Optional)", ph: "ex: I'll come back!", btn: "Submit Feedback", res: "Generated Review", copy: "📋 Copy & Open Google Maps", loading: "Processing...", error: "Failed.", copied: "Copied!", thanks: "Thank you for your valuable feedback.<br>We will use it to improve our service." },
+    ko: { sub: "서비스 향상을 위한 설문조사", q_rating: "1. 종합 평가", q_menu: "2. 오늘의 메뉴는?", q_point: "3. 좋았던 점은?", q_free: "4. 한마디 (선택)", ph: "예: 또 올게요!", btn: "설문 제출하기", res: "완성된 리뷰", copy: "📋 복사 후 Google 지도 열기", loading: "처리 중...", error: "실패했습니다.", copied: "복사되었습니다!", thanks: "소중한 의견 감사드립니다.<br>앞으로의 서비스 개선에 활용하겠습니다." },
+    zh_cn: { sub: "服务满意度调查", q_rating: "1. 综合评价", q_menu: "2. 今天的项目？", q_point: "3. 满意的地方？", q_free: "4. 留言（选填）", ph: "例：下次还会来！", btn: "提交问卷", res: "生成的评价", copy: "📋 复制并打开Google地图", loading: "处理中...", error: "失败。", copied: "已复制！", thanks: "感谢您的宝贵意见。<br>我们将用于改善我们的服务。" },
+    zh_tw: { sub: "服務滿意度調查", q_rating: "1. 綜合評價", q_menu: "2. 今天的項目？", q_point: "3. 滿意的地方？", q_free: "4. 留言（選填）", ph: "例：下次還會來！", btn: "提交問卷", res: "生成的評價", copy: "📋 複製並打開Google地圖", loading: "處理中...", error: "失敗。", copied: "已複製！", thanks: "感謝您的寶貴意見。<br>我們將用於改善我們的服務。" }
   };
 
   let selectedMenus = [];
@@ -123,6 +152,7 @@
     currentLang = document.getElementById("langSelect").value;
     const ui = uiText[currentLang];
     document.getElementById("subtitle").innerText = ui.sub;
+    document.getElementById("q_rating_title").innerText = ui.q_rating;
     document.getElementById("q_menu_title").innerText = ui.q_menu;
     document.getElementById("q_point_title").innerText = ui.q_point;
     document.getElementById("q_free_title").innerText = ui.q_free;
@@ -134,9 +164,33 @@
   }
 
   async function generateReview() {
+    // 選択された星の数を取得
+    const rating = parseInt(document.querySelector('input[name="rating"]:checked').value);
     const generateBtn = document.getElementById("generateBtn");
+    
     generateBtn.disabled = true;
     generateBtn.innerText = uiText[currentLang].loading;
+
+    const resultArea = document.getElementById("resultArea");
+    const reviewContent = document.getElementById("reviewContent");
+    const thankYouContent = document.getElementById("thankYouContent");
+
+    resultArea.style.display = "block";
+
+    // ★ 星3以下の場合は、ここで処理を終了し、サンクスメッセージだけを表示する
+    if (rating <= 3) {
+      reviewContent.style.display = "none";
+      thankYouContent.style.display = "block";
+      thankYouContent.innerHTML = uiText[currentLang].thanks;
+      
+      generateBtn.disabled = false;
+      generateBtn.innerText = uiText[currentLang].btn;
+      return; // ここで処理ストップ（APIは叩かない）
+    }
+
+    // ★ 星4・5の場合はAIで口コミを生成してGoogleマップへ誘導する
+    thankYouContent.style.display = "none";
+    reviewContent.style.display = "block";
 
     const payload = {
       language: currentLang,
@@ -146,7 +200,6 @@
     };
 
     try {
-      // ★ ここがVercel用（/api/...）に変わっています
       const res = await fetch("/api/generate-review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,7 +210,6 @@
       if (!res.ok) throw new Error(data.error || "生成失敗");
 
       document.getElementById("finalReview").value = data.review;
-      document.getElementById("resultArea").style.display = "block";
     } catch (err) {
       console.error(err);
       alert(uiText[currentLang].error);

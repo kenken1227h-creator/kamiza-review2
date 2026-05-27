@@ -14,9 +14,9 @@ const MASTER = {
     p2: { ja: "希望通りの仕上がり", en: "Finish as imagined", ko: "원하던 스타일 완성", zh_cn: "符合预期的效果", zh_tw: "符合預期的效果" },
     p3: { ja: "手際が良くスピーディー", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
     p4: { ja: "落ち着いた接客", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
-    p5: { ja: "二条駅・大宮駅からのアクセスが良い", en: "Close to Nijo/Omiya station", ko: "니조역/오미야역에서 가까움", zh_cn: "离二条站/大宫站近", zh_tw: "離二條站/大宮站近" },
-    p6: { ja: "渋くてかっこいい店の雰囲気", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
-    p7: { ja: "シャンプーが気持ちいい", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
+    p5: { ja: "駅からの近さ", en: "Close to the station", ko: "역에서 가까움", zh_cn: "离车站近", zh_tw: "離車站近" },
+    p6: { ja: "渋くて落ち着く内装", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
+    p7: { ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
   }
 };
 
@@ -26,7 +26,6 @@ export default async function handler(req, res) {
   }
   
   try {
-    // Vercelのお作法に合わせてデータを読み込む
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const lang = body.language || "ja";
     const selectedMenuIds = body.menus || [];
@@ -44,20 +43,19 @@ export default async function handler(req, res) {
     指定された言語（${lang}）で出力してください。
 
     【絶対的なルール（AIっぽさを完全に消すこと）】
-    ・店名（BAR BER SHOP 髪座、髪座など）を書く際、「」や『』などの括弧は絶対に使用しないでください。
-    ・「結論として」「まとめると」「特筆すべき点は」「〜にお伺いしました」などの、AI特有の堅苦しい表現は絶対に使用禁止です。
-    ・箇条書きは禁止です。一つの自然な文章の流れとして書いてください。
-    ・実際の人間がスマホでパッと打ったような、少しラフでリアルな温度感のある文章にしてください。
-    ・短くてスパッとした文（例：「とても良いバーバーでした。」「ご丁寧で気持ちいい。」）や、少し感情的な文（例：「想像以上の仕上がりに嬉しかったです。」）を混ぜてリアルさを出してください。
+    ・「結論から言うと」「今回、」「〜という印象です」「特筆すべき点は」「〜にお伺いしました」といった、AI特有の堅苦しく優等生すぎる表現やレポートのような書き出しは絶対に使用禁止です。
+    ・箇条書きは禁止です。
+    ・実際の人間がスマホでパッと打ったような、少しラフでリアルな温度感のある文章にしてください。短くてスパッとした一文を混ぜるのがコツです。
+    ・必ず文章のどこかに「BAR BER SHOP 髪座」という店名を含めてください。
+    ・店名を書く際、「」や『』などの括弧は絶対に使用しないでください。
     `;
 
     if (lang === "ja") {
       systemPrompt += `
-    ・MEO対策として「二条」か「大宮」の地名と、「理容室」「${cutKeyword}」を文章に含めてください。
-    ・【超重要】地名やキーワードは検索対策っぽくならないよう、極めて自然に溶け込ませてください。
-      例：「二条で${cutKeyword}の上手い理容室を探していて…」
-      例：「大宮エリアにある歴史のありそうな理容室です。」
-      例：「京都に来たので二条の理容室でお願いしました。」
+    ・MEO対策として「二条」または「大宮」のいずれかの地名と、「理容室」「${cutKeyword}」を文章に含めてください。
+    ・【超重要】地名は文章の冒頭で唐突に出すのではなく、文の途中（中盤）の自然な文脈に溶け込ませてください。
+      良い例：「家から近い二条周辺で${cutKeyword}が上手い理容室を探していて、BAR BER SHOP 髪座を見つけました。」
+      良い例：「大宮エリアで通いやすいお店を探していたので、大満足です。」
       `;
     } else {
       systemPrompt += `
@@ -66,17 +64,17 @@ export default async function handler(req, res) {
       `;
     }
 
-    const userPrompt = `メニュー：${menuTexts.join(", ")}\n良かった点：${pointTexts.join(", ")}\n自由記述：${freeText}\n\nこの条件で、本物の人間が書いたような自然な口コミを生成してください。`;
+    const userPrompt = `メニュー：${menuTexts.join(", ")}\n良かった点：${pointTexts.join(", ")}\n自由記述：${freeText}\n\nこの条件で、絶対にAIが書いたとバレない本物の人間のような口コミを生成してください。`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-      temperature: 0.8,
+      temperature: 0.85, 
     });
 
     let review = (response.choices[0]?.message?.content || "").trim();
 
-    // AIが勝手につけた括弧をプログラムで強制的に削除する
+    // AIが勝手につけた括弧をプログラムで強制的に削除する（最終防衛線）
     review = review.replace(/「BAR BER SHOP 髪座」/g, "BAR BER SHOP 髪座");
     review = review.replace(/『BAR BER SHOP 髪座』/g, "BAR BER SHOP 髪座");
     review = review.replace(/「髪座」/g, "髪座");

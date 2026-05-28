@@ -16,7 +16,6 @@
   .form-group { margin-bottom: 25px; }
   label.section-title { display: block; font-weight: bold; margin-bottom: 12px; color: var(--accent-color); border-bottom: 1px solid #444; padding-bottom: 5px; }
   
-  /* 星評価のスタイル */
   .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; font-size: 35px; }
   .star-rating input { display: none; }
   .star-rating label { color: #555; cursor: pointer; transition: 0.2s; }
@@ -33,7 +32,6 @@
   .result-area { display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #555; }
   .copy-btn { width: 100%; background-color: var(--accent-color); color: #121212; border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 15px; cursor: pointer; }
   
-  /* サンクスメッセージのスタイル */
   .thank-you-msg { text-align: center; font-weight: bold; color: var(--accent-color); font-size: 18px; line-height: 1.5; padding: 20px 0; }
 </style>
 </head>
@@ -89,7 +87,7 @@
     </div>
     
     <div id="thankYouContent" class="thank-you-msg" style="display:none;">
-      </div>
+    </div>
   </div>
 </div>
 
@@ -111,7 +109,7 @@
     { id: "p3", ja: "手際が良くスピーディー", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
     { id: "p4", ja: "落ち着いた接客", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
     { id: "p5", ja: "駅からの近さ", en: "Close to the station", ko: "역에서 가까움", zh_cn: "离车站近", zh_tw: "離車站近" },
-    { id: "p6", ja: "渋くて落ち着く内装", en: "Cool & relaxing interior", ko: "멋진 인테리어", zh_cn: "复古舒适的内饰", zh_tw: "復古舒適的裝潢" },
+    { id: "p6", ja: "落ち着く内装", en: "Relaxing interior", ko: "편안한 인테리어", zh_cn: "舒适的内饰", zh_tw: "舒適的裝潢" }, // ★ ここを変更しました
     { id: "p7", ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
   ];
 
@@ -164,7 +162,6 @@
   }
 
   async function generateReview() {
-    // 選択された星の数を取得
     const rating = parseInt(document.querySelector('input[name="rating"]:checked').value);
     const generateBtn = document.getElementById("generateBtn");
     
@@ -177,7 +174,6 @@
 
     resultArea.style.display = "block";
 
-    // ★ 星3以下の場合は、ここで処理を終了し、サンクスメッセージだけを表示する
     if (rating <= 3) {
       reviewContent.style.display = "none";
       thankYouContent.style.display = "block";
@@ -185,10 +181,9 @@
       
       generateBtn.disabled = false;
       generateBtn.innerText = uiText[currentLang].btn;
-      return; // ここで処理ストップ（APIは叩かない）
+      return; 
     }
 
-    // ★ 星4・5の場合はAIで口コミを生成してGoogleマップへ誘導する
     thankYouContent.style.display = "none";
     reviewContent.style.display = "block";
 

@@ -15,7 +15,7 @@ const MASTER = {
     p3: { ja: "手際が良くスピーディー", en: "Efficiency", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
     p4: { ja: "落ち着いた接客", en: "Friendly atmosphere", ko: "편안한 분위기", zh_cn: "轻松的氛围", zh_tw: "輕鬆的氛圍" },
     p5: { ja: "駅からの近さ", en: "Close to the station", ko: "역에서 가까움", zh_cn: "离车站近", zh_tw: "離車站近" },
-    p6: { ja: "落ち着く内装", en: "Relaxing interior", ko: "편안한 인테리어", zh_cn: "舒适的内饰", zh_tw: "舒適的裝潢" }, // ★ ここを変更
+    p6: { ja: "落ち着く内装", en: "Relaxing interior", ko: "편안한 인테리어", zh_cn: "舒适的内饰", zh_tw: "舒適的裝潢" },
     p7: { ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" }
   }
 };
@@ -53,6 +53,13 @@ export default async function handler(req, res) {
     ・短くてスパッとした一文（例：「仕上がりに満足。」「手際が良かった。」）を交えつつ、冷たい印象になりすぎないよう自然な感想にしてください。
     ・店名を書く際、「」や『』などの括弧は絶対に使用しないこと。
     `;
+
+    // 「初めて」に関する特別ルール
+    if (!freeText.includes("初")) {
+      systemPrompt += `
+    ・【超重要】お客様は常連（リピーター）の可能性があります。「初めて行った」「初めて利用した」といった初来店を意味する言葉は絶対に勝手に作って書かないでください。
+      `;
+    }
 
     // 「手際が良くスピーディー」が選ばれた場合の特別ルール
     if (hasSpeedy) {

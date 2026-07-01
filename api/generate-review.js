@@ -4,7 +4,7 @@ const MASTER = {
   menus: {
     m1: { ja: "メンズカット", en: "Men's Cut", ko: "남성 커트", zh_cn: "男士剪发", zh_tw: "男士剪髮" },
     m2: { ja: "スキンフェード", en: "Skin Fade", ko: "스킨 페이드", zh_cn: "渐变理发", zh_tw: "漸層理髮" },
-    m3: { ja: "カラー", en: "Color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
+    m3: { ja: "カラー", en: "Color", ko: "컬ラー", zh_cn: "染发", zh_tw: "染髮" },
     m4: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
     m5: { ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
     m6: { ja: "濡れパン", en: "Wet Punch", ko: "젖은 펀치 파마", zh_cn: "湿发感烫", zh_tw: "濕髮感燙" }
@@ -30,12 +30,35 @@ export default async function handler(req, res) {
     const lang = body.language || "ja";
     const selectedMenuIds = body.menus || [];
     const selectedPointIds = body.points || [];
+
+    // -------------------------------------------------------------
+    // ★【プログラムによる絶対的ランダム化ロジック】
+    // -------------------------------------------------------------
+    let finalPointIds = [...selectedPointIds];
+    
+    // 1. 選択された項目をプログラムで物理的にシャッフル（並び替え）する
+    finalPointIds.sort(() => Math.random() - 0.5);
+    
+    // 2. たくさん選ばれている場合、強制的にランダムな数（2〜3個）に間引く
+    if (finalPointIds.length > 3) {
+      // 2個か3個、ランダムで決める
+      const randomCount = Math.floor(Math.random() * 2) + 2; 
+      finalPointIds = finalPointIds.slice(0, randomCount);
+    } else if (finalPointIds.length === 3) {
+      // 3個選ばれているときも、3割の確率であえて2個に減らしてバリエーションを出す
+      if (Math.random() < 0.3) {
+        finalPointIds = finalPointIds.slice(0, 2);
+      }
+    }
+    // -------------------------------------------------------------
+
     const menuTexts = selectedMenuIds.map(m => MASTER.menus[m][lang]).filter(Boolean);
-    const pointTexts = selectedPointIds.map(p => MASTER.points[p][lang]).filter(Boolean);
+    // ランダムに厳選された項目だけを文字に変換してAIに渡す
+    const pointTexts = finalPointIds.map(p => MASTER.points[p][lang]).filter(Boolean);
     const freeText = body.freeText || "";
 
     const hasSkinFade = selectedMenuIds.includes("m2");
-    const hasSpeedy = selectedPointIds.includes("p3");
+    const hasSpeedy = finalPointIds.includes("p3"); // 間引かれた結果、手際が含まれているか
     const cutKeyword = hasSkinFade ? "フェード" : "カット";
 
     const langNames = {
@@ -55,13 +78,10 @@ export default async function handler(req, res) {
     【最重要出力ルール】
     出力する文章は、絶対に「${targetLang}」のみで記述してください。
     
-    【多様性とランダム性の確保（超重要）】
-    ・お客様が選んだ「良かった点」が多数（3つ以上）ある場合、すべてを律儀に羅列するとロボットのように不自然になります。提供された「良かった点」の中から、毎回ランダムに2〜3個だけをピックアップして文章化し、残りはあえて無視してください。
-    ・過去の投稿と内容が被って怪しまれないよう、毎回「書き出しの言葉」「文章の順番」「語尾（〜だった、〜で満足、体言止めなど）」を意図的にバラバラに変化させてください。
-
     【文体と長さの絶対的な指定】
-    長文や、AI特有の「結論から言うと」といった堅苦しい表現は絶対に使用禁止です。
-    主語（スタッフ、理容師など）は極力省き、短くてスパッとした、無駄のない自然な大人の文章にしてください。
+    長文や、AI特有の「結論から言うと」「〜という印象です」といった堅苦しい表現は絶対に使用禁止です。
+    主語（スタッフ、理容師など）は完全に省き、短くてスパッとした、無駄のない自然な大人の文章にしてください。
+    毎回「書き出しの言葉」や「文章の順番」、「語尾（〜だった、〜で満足、体言止めなど）」を意図的にバラバラに変えて、過去の投稿と被らないようにしてください。
 
     【状況の捏造禁止に関する重要ルール】
     ・【初来店の制限】入力された「一言感想」に「初めて」等の言葉がない限り、「初めて行った」等とは絶対に書かないこと。
@@ -102,7 +122,7 @@ export default async function handler(req, res) {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-      temperature: 0.85, // 表現のバラつきを生むために引き上げました
+      temperature: 0.9, // ランダム性をさらに高めるために少し上げました
     });
 
     let review = (response.choices[0]?.message?.content || "").trim();

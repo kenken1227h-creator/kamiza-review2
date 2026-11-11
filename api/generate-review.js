@@ -7,7 +7,8 @@ const MASTER = {
     m3: { ja: "カラー", en: "Color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
     m4: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
     m5: { ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
-    m6: { ja: "濡れパン", en: "Wet Punch", ko: "젖은 펀치 파마", zh_cn: "湿发感烫", zh_tw: "濕髮感燙" }
+    // 濡れパンは口コミでは「パーマ」として書く（AIに「濡れパン」という言葉は渡さない）
+    m6: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" }
   },
   points: {
     p1: {
@@ -28,11 +29,13 @@ const MASTER = {
   }
 };
 
-// 必ず本文に入れるキーワード（フェード・パーマ・メッシュ）
+// 必ず本文に入れるキーワード（フェード・パーマ・メッシュ・濡れパン→パーマ）
+const PERM_WORD = { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" };
 const REQUIRED_KEYWORDS_MAP = {
   m2: { ja: "フェード", en: "Fade", ko: "페이드", zh_cn: "渐变", zh_tw: "漸層" },
-  m4: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
-  m5: { ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" }
+  m4: PERM_WORD,
+  m5: { ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
+  m6: PERM_WORD
 };
 
 const LANG_NAMES = {
@@ -75,7 +78,7 @@ export default async function handler(req, res) {
     }
 
     // ?. … 知らない番号（例：p8）が来てもエラーにせず、その項目だけ飛ばす
-    const menuTexts = selectedMenuIds.map(m => MASTER.menus[m]?.[lang]).filter(Boolean);
+    const menuTexts = [...new Set(selectedMenuIds.map(m => MASTER.menus[m]?.[lang]).filter(Boolean))];
     const pointTexts = finalPointIds.map(p => {
       const val = MASTER.points[p]?.[lang];
       if (Array.isArray(val)) return val[Math.floor(Math.random() * val.length)];
@@ -89,9 +92,9 @@ export default async function handler(req, res) {
     const cutKeyword = hasSkinFade ? "フェード" : "カット";
 
     // 選ばれたメニューから必須キーワードを取り出す
-    const requiredKeywords = selectedMenuIds
+    const requiredKeywords = [...new Set(selectedMenuIds
       .map(id => REQUIRED_KEYWORDS_MAP[id]?.[lang])
-      .filter(Boolean);
+      .filter(Boolean))];
 
     const targetLang = LANG_NAMES[lang];
 
@@ -146,7 +149,8 @@ export default async function handler(req, res) {
         ],
         temperature: 0.85,
       });
-      return (response.choices[0]?.message?.content || "").trim();
+      // 念のため：「濡れパン」と書かれていたら「パーマ」に置き換えてからチェックする
+      return (response.choices[0]?.message?.content || "").trim().replace(/濡れパン/g, "パーマ");
     };
 
     let review = await generate();

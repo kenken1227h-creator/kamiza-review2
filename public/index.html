@@ -26,10 +26,6 @@
   label.section-title { display: block; font-weight: bold; margin-bottom: 12px; color: var(--accent-color); border-bottom: 1px solid #444; padding-bottom: 5px; }
   .hint { font-size: 12px; color: #aaa; margin: -6px 0 10px; }
 
-  .star-rating { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; font-size: 35px; }
-  .star-rating input { display: none; }
-  .star-rating label { color: #555; cursor: pointer; transition: 0.2s; }
-  .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: var(--accent-color); }
 
   .options { display: flex; flex-wrap: wrap; gap: 10px; }
   .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; }
@@ -66,18 +62,8 @@
   <div class="progress-label" id="progressLabel"></div>
   <div class="progress"><span></span><span></span><span></span></div>
 
-  <!-- ステップ1：総合評価・来店回数・きっかけ -->
+  <!-- ステップ1：来店回数・きっかけ -->
   <div class="step active" id="step1">
-    <div class="form-group">
-      <label class="section-title" id="q_rating_title"></label>
-      <div class="star-rating">
-        <input type="radio" id="star5" name="rating" value="5" checked><label for="star5">★</label>
-        <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
-        <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
-        <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
-        <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
-      </div>
-    </div>
     <div class="form-group">
       <label class="section-title" id="q_visit_title"></label>
       <p class="hint" id="optional1"></p>
@@ -172,11 +158,11 @@
   ];
 
   const uiText = {
-    ja: { sub: "サービス向上のためのアンケート", step: "ステップ", q_rating: "1. 本日の総合評価", q_visit: "2. ご来店は何回目ですか？", q_occasion: "3. 今回のきっかけは？", optional: "任意・スキップできます", q_menu: "4. 本日のメニューは？", q_point: "5. 良かった点は？", multi: "いくつでも選べます", q_free: "6. 一言感想（任意）", ph: "例：顔そりが気持ちよくて途中で寝てしまいました", next: "次へ", back: "戻る", needMenu: "メニューを1つ以上選んでください", btn: "口コミの下書きを作る", res: "口コミの下書き", note: "ご自身の言葉に自由に書き換えてからご投稿ください。星の数もご自身の評価のままでお願いします。", fallbackNote: "文章をうまく作れませんでした。お手数ですが、下のメモを参考にご自身で書いていただけると嬉しいです。", copy: "📋 コピーしてGoogleマップを開く", loading: "作成中...", copied: "コピーしました！", rating: "総合評価", visit: "来店", occasion: "きっかけ", menu: "メニュー", point: "良かった点", free: "一言" },
-    en: { sub: "Customer Satisfaction Survey", step: "Step", q_rating: "1. Overall Rating", q_visit: "2. How many times have you visited?", q_occasion: "3. What brought you in today?", optional: "Optional — you can skip", q_menu: "4. Today's menu?", q_point: "5. What did you like?", multi: "Select as many as you like", q_free: "6. Comments (Optional)", ph: "ex: The shave was so relaxing I almost fell asleep", next: "Next", back: "Back", needMenu: "Please select at least one menu item", btn: "Create a review draft", res: "Review draft", note: "Please feel free to rewrite it in your own words before posting, and give the star rating you actually feel.", fallbackNote: "We couldn't create a draft this time. Please use the notes below as a reference and write in your own words.", copy: "📋 Copy & Open Google Maps", loading: "Creating...", copied: "Copied!", rating: "Rating", visit: "Visit", occasion: "Occasion", menu: "Menu", point: "Liked", free: "Comment" },
-    ko: { sub: "서비스 향상을 위한 설문조사", step: "단계", q_rating: "1. 종합 평가", q_visit: "2. 몇 번째 방문이신가요?", q_occasion: "3. 이번 방문 계기는?", optional: "선택 사항 · 건너뛰어도 됩니다", q_menu: "4. 오늘의 메뉴는?", q_point: "5. 좋았던 점은?", multi: "여러 개 선택할 수 있습니다", q_free: "6. 한마디 (선택)", ph: "예: 면도가 너무 편해서 잠들 뻔했어요", next: "다음", back: "뒤로", needMenu: "메뉴를 하나 이상 선택해 주세요", btn: "리뷰 초안 만들기", res: "리뷰 초안", note: "게시하기 전에 자유롭게 본인의 말로 고쳐 주세요. 별점도 실제 느낀 그대로 남겨 주세요.", fallbackNote: "초안을 만들지 못했습니다. 아래 메모를 참고해 직접 작성해 주시면 감사하겠습니다.", copy: "📋 복사 후 Google 지도 열기", loading: "작성 중...", copied: "복사되었습니다!", rating: "평가", visit: "방문", occasion: "계기", menu: "메뉴", point: "좋았던 점", free: "한마디" },
-    zh_cn: { sub: "服务满意度调查", step: "步骤", q_rating: "1. 综合评价", q_visit: "2. 这是第几次来店？", q_occasion: "3. 这次来店的原因？", optional: "选填，可跳过", q_menu: "4. 今天的项目？", q_point: "5. 满意的地方？", multi: "可多选", q_free: "6. 留言（选填）", ph: "例：修面太舒服了，差点睡着", next: "下一步", back: "返回", needMenu: "请至少选择一个项目", btn: "生成评价草稿", res: "评价草稿", note: "发布前请随意改成您自己的话，星级也请按您的真实感受打分。", fallbackNote: "这次没能生成草稿。请参考下面的要点，用自己的话写评价。", copy: "📋 复制并打开Google地图", loading: "生成中...", copied: "已复制！", rating: "评价", visit: "来店", occasion: "原因", menu: "项目", point: "满意之处", free: "留言" },
-    zh_tw: { sub: "服務滿意度調查", step: "步驟", q_rating: "1. 綜合評價", q_visit: "2. 這是第幾次來店？", q_occasion: "3. 這次來店的原因？", optional: "選填，可跳過", q_menu: "4. 今天的項目？", q_point: "5. 滿意的地方？", multi: "可複選", q_free: "6. 留言（選填）", ph: "例：修面太舒服了，差點睡著", next: "下一步", back: "返回", needMenu: "請至少選擇一個項目", btn: "產生評價草稿", res: "評價草稿", note: "發布前請隨意改成您自己的話，星等也請依您的真實感受評分。", fallbackNote: "這次沒能產生草稿。請參考下面的重點，用自己的話寫評價。", copy: "📋 複製並打開Google地圖", loading: "產生中...", copied: "已複製！", rating: "評價", visit: "來店", occasion: "原因", menu: "項目", point: "滿意之處", free: "留言" }
+    ja: { sub: "サービス向上のためのアンケート", step: "ステップ", q_visit: "1. ご来店は何回目ですか？", q_occasion: "2. 今回のきっかけは？", optional: "任意・スキップできます", q_menu: "3. 本日のメニューは？", q_point: "4. 良かった点は？", multi: "いくつでも選べます", q_free: "5. 一言感想（任意）", ph: "例：顔そりが気持ちよくて途中で寝てしまいました", next: "次へ", back: "戻る", needMenu: "メニューを1つ以上選んでください", btn: "口コミの下書きを作る", res: "口コミの下書き", note: "ご自身の言葉に自由に書き換えてからご投稿ください。星の数はGoogleマップの画面でご自身でお選びください。", fallbackNote: "文章をうまく作れませんでした。お手数ですが、下のメモを参考にご自身で書いていただけると嬉しいです。", copy: "📋 コピーしてGoogleマップを開く", loading: "作成中...", copied: "コピーしました！", visit: "来店", occasion: "きっかけ", menu: "メニュー", point: "良かった点", free: "一言" },
+    en: { sub: "Customer Satisfaction Survey", step: "Step", q_visit: "1. How many times have you visited?", q_occasion: "2. What brought you in today?", optional: "Optional — you can skip", q_menu: "3. Today's menu?", q_point: "4. What did you like?", multi: "Select as many as you like", q_free: "5. Comments (Optional)", ph: "ex: The shave was so relaxing I almost fell asleep", next: "Next", back: "Back", needMenu: "Please select at least one menu item", btn: "Create a review draft", res: "Review draft", note: "Please feel free to rewrite it in your own words before posting. Choose your star rating yourself on the Google Maps screen.", fallbackNote: "We couldn't create a draft this time. Please use the notes below as a reference and write in your own words.", copy: "📋 Copy & Open Google Maps", loading: "Creating...", copied: "Copied!", visit: "Visit", occasion: "Occasion", menu: "Menu", point: "Liked", free: "Comment" },
+    ko: { sub: "서비스 향상을 위한 설문조사", step: "단계", q_visit: "1. 몇 번째 방문이신가요?", q_occasion: "2. 이번 방문 계기는?", optional: "선택 사항 · 건너뛰어도 됩니다", q_menu: "3. 오늘의 메뉴는?", q_point: "4. 좋았던 점은?", multi: "여러 개 선택할 수 있습니다", q_free: "5. 한마디 (선택)", ph: "예: 면도가 너무 편해서 잠들 뻔했어요", next: "다음", back: "뒤로", needMenu: "메뉴를 하나 이상 선택해 주세요", btn: "리뷰 초안 만들기", res: "리뷰 초안", note: "게시하기 전에 자유롭게 본인의 말로 고쳐 주세요. 별점은 Google 지도 화면에서 직접 선택해 주세요.", fallbackNote: "초안을 만들지 못했습니다. 아래 메모를 참고해 직접 작성해 주시면 감사하겠습니다.", copy: "📋 복사 후 Google 지도 열기", loading: "작성 중...", copied: "복사되었습니다!", visit: "방문", occasion: "계기", menu: "메뉴", point: "좋았던 점", free: "한마디" },
+    zh_cn: { sub: "服务满意度调查", step: "步骤", q_visit: "1. 这是第几次来店？", q_occasion: "2. 这次来店的原因？", optional: "选填，可跳过", q_menu: "3. 今天的项目？", q_point: "4. 满意的地方？", multi: "可多选", q_free: "5. 留言（选填）", ph: "例：修面太舒服了，差点睡着", next: "下一步", back: "返回", needMenu: "请至少选择一个项目", btn: "生成评价草稿", res: "评价草稿", note: "发布前请随意改成您自己的话。星级请在Google地图页面上自行选择。", fallbackNote: "这次没能生成草稿。请参考下面的要点，用自己的话写评价。", copy: "📋 复制并打开Google地图", loading: "生成中...", copied: "已复制！", visit: "来店", occasion: "原因", menu: "项目", point: "满意之处", free: "留言" },
+    zh_tw: { sub: "服務滿意度調查", step: "步驟", q_visit: "1. 這是第幾次來店？", q_occasion: "2. 這次來店的原因？", optional: "選填，可跳過", q_menu: "3. 今天的項目？", q_point: "4. 滿意的地方？", multi: "可複選", q_free: "5. 留言（選填）", ph: "例：修面太舒服了，差點睡著", next: "下一步", back: "返回", needMenu: "請至少選擇一個項目", btn: "產生評價草稿", res: "評價草稿", note: "發布前請隨意改成您自己的話。星等請在Google地圖頁面上自行選擇。", fallbackNote: "這次沒能產生草稿。請參考下面的重點，用自己的話寫評價。", copy: "📋 複製並打開Google地圖", loading: "產生中...", copied: "已複製！", visit: "來店", occasion: "原因", menu: "項目", point: "滿意之處", free: "留言" }
   };
 
   let selectedMenus = [];
@@ -244,7 +230,6 @@
     const ui = uiText[currentLang];
     const set = (id, text) => $(id).innerText = text;
     set("subtitle", ui.sub);
-    set("q_rating_title", ui.q_rating);
     set("q_visit_title", ui.q_visit);
     set("q_occasion_title", ui.q_occasion);
     set("optional1", ui.optional);
@@ -266,9 +251,9 @@
   }
 
   // AIが失敗したときに見せるメモ（選んだ内容の箇条書き）
-  function buildFallbackMemo(rating) {
+  function buildFallbackMemo() {
     const ui = uiText[currentLang];
-    const lines = [`${ui.rating}: ${"★".repeat(rating)}`];
+    const lines = [];
     if (selectedVisit) lines.push(`${ui.visit}: ${selectedVisit[currentLang]}`);
     if (selectedOccasion) lines.push(`${ui.occasion}: ${selectedOccasion[currentLang]}`);
     lines.push(`${ui.menu}: ${selectedMenus.map(m => m[currentLang]).join(" / ")}`);
@@ -279,8 +264,7 @@
   }
 
   async function generateReview() {
-    // 星の数に関係なく、全員に同じ流れで下書きを出す（低評価で止めない）
-    const rating = parseInt(document.querySelector('input[name="rating"]:checked').value);
+    // 星はアンケートでは聞かない（お客様がGoogleの投稿画面で自分で選ぶ）
     const ui = uiText[currentLang];
     const generateBtn = $("generateBtn");
 
@@ -289,7 +273,6 @@
 
     const payload = {
       language: currentLang,
-      rating,
       visit: selectedVisit ? selectedVisit.id : null,
       occasion: selectedOccasion ? selectedOccasion.id : null,
       menus: selectedMenus.map(m => m.id),
@@ -309,7 +292,7 @@
       $("resultNote").innerText = ui.note;
     } catch (err) {
       console.error(err);
-      $("finalReview").value = buildFallbackMemo(rating);
+      $("finalReview").value = buildFallbackMemo();
       $("resultNote").innerText = ui.fallbackNote;
     } finally {
       $("resultArea").style.display = "block";

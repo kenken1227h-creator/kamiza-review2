@@ -42,94 +42,155 @@ const MASTER = {
   },
   // 今回のきっかけ（文章の書き分けに使う）
   occasions: {
-    o1: { ja: "いつものメンテナンス", en: "regular maintenance trim", ko: "평소 관리", zh_cn: "日常修剪", zh_tw: "日常修剪" },
-    o2: { ja: "仕事・就活の前", en: "before work or job hunting", ko: "일·취업 준비 전", zh_cn: "工作或求职前", zh_tw: "工作或求職前" },
-    o3: { ja: "イベント・結婚式の前", en: "before an event or a wedding", ko: "행사·결혼식 전", zh_cn: "活动或婚礼前", zh_tw: "活動或婚禮前" },
-    o4: { ja: "気分を変えたくて", en: "wanted a change", ko: "기분 전환", zh_cn: "想换个心情", zh_tw: "想換個心情" },
+    o1: { ja: "いつもの散髪", en: "a regular trim", ko: "평소처럼 다듬으러", zh_cn: "平常修剪", zh_tw: "平常修剪" },
+    o2: { ja: "仕事や就活の前に整えたくて", en: "wanted to look sharp before work or job hunting", ko: "일이나 취업 준비 전에 정리하려고", zh_cn: "工作或求职前想整理一下", zh_tw: "工作或求職前想整理一下" },
+    o3: { ja: "イベントや結婚式の前に", en: "getting ready for an event or a wedding", ko: "행사나 결혼식 앞두고", zh_cn: "活动或婚礼前", zh_tw: "活動或婚禮前" },
+    o4: { ja: "気分を変えたくて", en: "wanted a change", ko: "기분 전환하고 싶어서", zh_cn: "想换个心情", zh_tw: "想換個心情" },
     o5: { ja: "旅行中に立ち寄った", en: "stopped by while traveling", ko: "여행 중에 들름", zh_cn: "旅行途中顺路来", zh_tw: "旅行途中順路來" },
   },
+  // 良かった点（お店の言い方ではなく、お客様が話すときの言い方で渡す。毎回1つを選ぶ）
   points: {
     p1: {
-      ja: [
-        "カウンセリングが丁寧",
-        "ざっくりした注文でも意図を汲み取ってくれた",
-        "髪質や骨格に合わせた提案をしてくれた",
-        "細かい要望までしっかり聞いてくれた",
-      ],
-      en: "Careful consultation", ko: "꼼꼼한 상담", zh_cn: "细致的咨询", zh_tw: "仔細的諮詢",
+      ja: ["ざっくり頼んでも、ちゃんと汲み取ってくれた", "話をよく聞いてくれた", "髪質に合わせて提案してくれた"],
+      en: ["got what I wanted even from a rough description", "really listened to what I wanted"],
+      ko: ["대충 말해도 잘 알아들어 줬다", "원하는 걸 잘 들어 줬다"],
+      zh_cn: ["随口说说也能明白我要什么", "很认真听我的要求"],
+      zh_tw: ["隨口說說也能懂我要什麼", "很認真聽我的需求"],
     },
-    p2: { ja: "希望通りの仕上がり", en: "Finish as imagined", ko: "원하던 스타일 완성", zh_cn: "符合预期的效果", zh_tw: "符合預期的效果" },
-    p3: { ja: "手際が良くスピーディー", en: "Quick and skillful", ko: "빠르고 능숙함", zh_cn: "手法娴熟", zh_tw: "手法俐落" },
-    p4: { ja: "落ち着いた接客", en: "Attentive service", ko: "친절한 응대", zh_cn: "周到的服务", zh_tw: "周到的服務" },
-    p5: { ja: "駅からの近さ", en: "Close to the station", ko: "역에서 가까움", zh_cn: "离车站近", zh_tw: "離車站近" },
-    p6: { ja: "落ち着く内装", en: "Relaxing interior", ko: "편안한 인테리어", zh_cn: "舒适的内饰", zh_tw: "舒適的裝潢" },
-    p7: { ja: "シャンプーが快適", en: "Comfortable shampoo", ko: "시원한 샴푸", zh_cn: "舒适的洗发", zh_tw: "舒服的洗髮" },
+    p2: {
+      ja: ["思ってた感じに仕上がった", "イメージ通りになった", "頼んだ感じにしてもらえた"],
+      en: ["came out just how I pictured it", "looks exactly how I wanted"],
+      ko: ["생각했던 느낌 그대로 나왔다", "원하던 대로 됐다"],
+      zh_cn: ["剪出来跟想的一样", "效果就是我想要的"],
+      zh_tw: ["剪出來跟想的一樣", "效果就是我想要的"],
+    },
+    p3: {
+      ja: ["手際がよくて早かった", "テキパキしてて待たされなかった"],
+      en: ["quick and efficient", "didn't take long at all"],
+      ko: ["손이 빠르고 능숙했다", "오래 걸리지 않았다"],
+      zh_cn: ["动作很利落", "没花多少时间"],
+      zh_tw: ["動作很俐落", "沒花多少時間"],
+    },
+    p4: {
+      ja: ["気さくで話しやすかった", "接客が落ち着いてて居心地がいい"],
+      en: ["easy to talk to", "friendly and relaxed"],
+      ko: ["편하게 대화할 수 있었다", "친절하고 편안했다"],
+      zh_cn: ["很好聊", "态度亲切"],
+      zh_tw: ["很好聊", "態度親切"],
+    },
+    p5: {
+      ja: ["二条駅から歩いてすぐ", "大宮駅からも歩いて行ける"],
+      en: ["a short walk from Nijo Station", "walkable from Omiya Station"],
+      ko: ["니조역에서 걸어서 금방", "오미야역에서도 걸어갈 수 있다"],
+      zh_cn: ["从二条站走过去很近", "从大宫站也能走到"],
+      zh_tw: ["從二條站走過去很近", "從大宮站也能走到"],
+    },
+    p6: {
+      ja: ["店内が落ち着く", "雰囲気がよくて居心地がいい"],
+      en: ["nice, calm atmosphere", "the shop feels relaxed"],
+      ko: ["가게 분위기가 편안하다", "인테리어가 차분하다"],
+      zh_cn: ["店里氛围很放松", "环境很舒服"],
+      zh_tw: ["店裡氣氛很放鬆", "環境很舒服"],
+    },
+    p7: {
+      ja: ["シャンプーが気持ちよかった", "シャンプーがうまい"],
+      en: ["the shampoo felt great", "great shampoo"],
+      ko: ["샴푸가 시원했다", "샴푸가 기분 좋았다"],
+      zh_cn: ["洗头很舒服", "洗发很舒服"],
+      zh_tw: ["洗頭很舒服", "洗髮很舒服"],
+    },
   },
+};
+
+// ===== 口コミの長さ（毎回ランダムに選ぶ。短い口コミが一番人間らしい）=====
+const LENGTHS = {
+  ja: ["40〜90文字くらいの短め", "90〜160文字くらい", "160〜240文字くらいの少し長め"],
+  en: ["about 15–35 words, short", "about 35–70 words", "about 70–110 words"],
+  ko: ["40~90자 정도로 짧게", "90~160자 정도", "160~240자 정도로 조금 길게"],
+  zh_cn: ["30–60字左右，简短", "60–110字左右", "110–170字左右，稍长"],
+  zh_tw: ["30–60字左右，簡短", "60–110字左右", "110–170字左右，稍長"],
+};
+const LENGTH_WEIGHTS = [0.45, 0.4, 0.15];
+
+// ===== AIがやりがちな言い回し（入っていたら書き直させる）=====
+const BANNED = {
+  ja: ["お世話になっ", "大満足", "心地よ", "はもちろん", "おすすめです", "オススメです", "ぜひ", "利用したいと思います", "通い続けたい", "リラックスできる時間", "本当に感謝", "アクセスしやすい", "丁寧なカウンセリング", "希望通りの仕上がり", "素晴らしい", "結論として", "総じて"],
+  en: ["highly recommend", "top-notch", "exceeded my expectations", "look no further", "hidden gem", "impeccable", "a must-visit"],
+  ko: ["강력 추천", "최고의 경험", "기대 이상"],
+  zh_cn: ["强烈推荐", "超出预期", "宝藏"],
+  zh_tw: ["強烈推薦", "超出預期", "寶藏"],
 };
 
 // ===== System Prompt（言語別）=====
 const SYSTEM_PROMPTS = {
-  ja: `あなたは京都の理容室に実際に行ったお客様として、Googleマップに投稿する口コミを書きます。
+  ja: `あなたは、京都の理容室で髪を切ってもらったばかりのお客様です。帰り道にスマホで、Googleマップに口コミをさっと書きます。
 
-【絶対ルール】
-- 150〜300文字程度の自然な日本語
-- 普通の人が書いたような、肩の力が抜けた口語の文体
-- 渡された情報だけを基に書く（行っていない施術や、なかった出来事を作らない）
-- 大げさな褒め言葉、宣伝っぽい表現、絵文字の多用はしない
-- 「結論として」「総じて」など機械的なまとめ言葉は使わない
-- 店名は「BAR BER SHOP 髪座」または「髪座」と書き、カギ括弧などの括弧で囲まない
-- 「二条」「大宮」は、駅からの近さや場所の話の流れで自然に触れられるときだけ使う
-- 改行は2〜3回程度
-- 毎回、書き出し・構成・言い回しを変える
-- 出力は口コミ本文のみ。前置きや説明は一切書かない`,
+【書き方】
+- 文章をうまく書こうとしない。友だちに話すくらいの温度で、思ったことをそのまま書く
+- 渡された材料を全部使わなくていい。印象に残ったことを1〜2個だけ書く
+- 「お客様の一言」があるときは、それが主役。口調・テンション・ノリ（ため口、ふざけ、丁寧など）を一言に合わせて、文章全体を書く。一言はほぼそのまま使い、浮かないようにつなげる
+- 一言がないときは、普通の人のくだけた「です・ます」か、ため口のどちらか
+- 長さは指定に従う。短いときは改行しない
+- 渡された情報だけで書く。受けていない施術や、なかった出来事を作らない
 
-  en: `You write a Google Maps review as a real customer who visited a barbershop in Kyoto, Japan.
+【使わない言い回し】
+- 「いつもお世話になっています」などのビジネスメールの書き出し
+- 「大満足」「心地よい」「〜はもちろん」「素晴らしい」「リラックスできる時間」「本当に感謝」
+- 「おすすめです」「ぜひ」「また利用したいと思います」「通い続けたいと思います」などの決まった締め
+- 「丁寧なカウンセリング」「希望通りの仕上がり」「アクセスしやすい」などのお店の宣伝のような言葉
+- 「結論として」「総じて」などの機械的なまとめ言葉
 
-[Strict rules]
-- 60–130 words of natural, casual English
-- Sound like an ordinary person, not AI
-- Use only the facts provided (do not invent services or events)
-- No exaggerated praise, salesy wording, or heavy emoji use
-- Never put the shop name in quotation marks or brackets
-- Mention Nijo or Omiya only when it fits naturally (e.g. location, access)
-- Vary the opening, structure, and wording every time
-- Output only the review body, with no preamble`,
+【お店のルール】
+- 店名を書くときは「髪座」または「BAR BER SHOP 髪座」。括弧で囲まない。店名は書かなくてもいい
+- 出力は口コミ本文のみ。前置きや説明は書かない`,
 
-  ko: `당신은 교토의 이용실을 실제로 방문한 손님으로서 구글 지도에 올릴 리뷰를 작성합니다.
+  en: `You just got a haircut at a barbershop in Kyoto, Japan. On your way out you quickly write a Google Maps review on your phone.
 
-【엄격한 규칙】
-- 150~300자 정도의 자연스러운 한국어 구어체
-- AI가 쓴 것처럼 보이지 않게, 평범한 사람의 문체
-- 제공된 정보만으로 작성(받지 않은 시술이나 없던 일을 지어내지 않음)
-- 과장된 칭찬, 광고성 표현, 이모지 남발 금지
-- 가게 이름을 따옴표나 괄호로 감싸지 않음
-- 니조·오미야는 위치나 접근성 이야기에서 자연스러울 때만 언급
-- 매번 시작·구성·표현을 다르게
-- 리뷰 본문만 출력(서두·설명 불필요)`,
+[How to write]
+- Don't try to write well. Write the way you'd text a friend.
+- You don't need to use every detail. Mention only 1–2 things that stuck with you.
+- If the customer's own comment is given, it is the heart of the review. Match its tone and energy (casual, joking, polite) across the whole review, keep it nearly as-is, and make it flow.
+- Follow the requested length. No line breaks for short reviews.
+- Use only the facts given. Don't invent services or events.
+- Avoid stock phrases: "highly recommend", "top-notch", "exceeded my expectations", "hidden gem", "look no further", "a must-visit".
+- If you name the shop, never put it in quotes or brackets. You don't have to name it.
+- Output only the review body.`,
 
-  zh_cn: `你是一位实际去过京都一家理发店的顾客，正在写要发布在 Google 地图上的评价。
+  ko: `당신은 교토의 이용실에서 방금 머리를 자른 손님입니다. 돌아가는 길에 휴대폰으로 구글 지도 리뷰를 빠르게 씁니다.
 
-【严格规则】
-- 约 100–200 字的自然简体中文口语
-- 像普通人写的，不要像 AI
-- 只根据提供的信息撰写（不要编造没做过的项目或没发生的事）
-- 不要夸张赞美、广告口吻或大量表情符号
-- 店名不要加引号或括号
-- 只有在谈到位置或交通时才自然提到二条或大宫
-- 每次都改变开头、结构和措辞
-- 只输出评价正文，不要任何前言`,
+【쓰는 법】
+- 잘 쓰려고 하지 말고, 친구에게 말하듯 편하게 쓴다
+- 받은 정보를 다 쓸 필요 없다. 기억에 남은 것 1~2개만
+- 손님 본인의 한마디가 있으면 그것이 중심. 말투와 텐션을 한마디에 맞추고, 거의 그대로 살려 자연스럽게 잇는다
+- 지정된 길이를 따른다. 짧으면 줄바꿈 없이
+- 제공된 정보만으로 쓴다. 없던 시술이나 일을 지어내지 않는다
+- "강력 추천", "최고의 경험", "기대 이상" 같은 상투적 표현 금지
+- 가게 이름을 쓸 때 따옴표나 괄호로 감싸지 않는다. 가게 이름은 안 써도 된다
+- 리뷰 본문만 출력`,
 
-  zh_tw: `你是一位實際去過京都一家理髮店的顧客，正在寫要發布在 Google 地圖上的評論。
+  zh_cn: `你刚在京都一家理发店剪完头发，回去的路上用手机在 Google 地图上随手写个评价。
 
-【嚴格規則】
-- 約 100–200 字的自然繁體中文口語
-- 像一般人寫的，不要像 AI
-- 只根據提供的資訊撰寫（不要編造沒做過的項目或沒發生的事）
-- 不要誇張讚美、廣告口吻或大量表情符號
-- 店名不要加引號或括號
-- 只有在談到位置或交通時才自然提到二條或大宮
-- 每次都改變開頭、結構和措辭
-- 只輸出評論本文，不要任何前言`,
+【写法】
+- 不用刻意写好，像跟朋友聊天一样随意
+- 不需要用上所有信息，只写印象最深的1–2点
+- 如果有顾客自己的话，那就是重点。整篇的语气和情绪要跟那句话一致，基本原样保留并自然衔接
+- 按指定长度写，短的不要换行
+- 只根据提供的信息写，不要编造
+- 不要用"强烈推荐""超出预期""宝藏店"之类的套话
+- 写店名时不加引号或括号，也可以不写店名
+- 只输出评价正文`,
+
+  zh_tw: `你剛在京都一家理髮店剪完頭髮，回去的路上用手機在 Google 地圖上隨手寫個評論。
+
+【寫法】
+- 不用刻意寫好，像跟朋友聊天一樣隨意
+- 不需要用上所有資訊，只寫印象最深的1–2點
+- 如果有顧客自己的話，那就是重點。整篇的語氣和情緒要跟那句話一致，基本原樣保留並自然銜接
+- 按指定長度寫，短的不要換行
+- 只根據提供的資訊寫，不要編造
+- 不要用「強烈推薦」「超出預期」「寶藏店」之類的套話
+- 寫店名時不加引號或括號，也可以不寫店名
+- 只輸出評論本文`,
 };
 
 // ===== 小さな道具 =====
@@ -143,6 +204,31 @@ const pickLabel = (entry, lang) => {
 const unique = (arr) => [...new Set(arr.filter(Boolean))];
 
 const MAX_ATTEMPTS = 3; // 最初の1回＋書き直し最大2回
+
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const pickLength = (lang) => {
+  const r = Math.random();
+  let acc = 0;
+  for (let i = 0; i < LENGTH_WEIGHTS.length; i++) {
+    acc += LENGTH_WEIGHTS[i];
+    if (r < acc) return LENGTHS[lang][i];
+  }
+  return LENGTHS[lang][0];
+};
+
+// 使ってはいけない言い回しが入っていないか
+const bannedFound = (text, lang) => {
+  const t = text.toLowerCase();
+  return (BANNED[lang] || []).filter((w) => t.includes(w.toLowerCase()));
+};
 
 // 本文に入っていない「必ず入れる言葉」を返す（英語は大文字・小文字を区別しない）
 const missingWords = (text, words) => {
@@ -162,65 +248,26 @@ function stripShopBrackets(text) {
 }
 
 // ===== User Prompt ビルダ =====
+// 材料は「使ってもいい情報」として渡し、全部を盛り込ませない
 function buildUserPrompt(lang, d) {
-  const shop = SHOP[lang];
-  const none = { ja: "（指定なし）", en: "(not specified)", ko: "(미지정)", zh_cn: "（未指定）", zh_tw: "（未指定）" }[lang];
-  const list = (arr, sep) => (arr.length ? arr.join(sep) : none);
+  const L = {
+    ja: { head: "口コミを1つ書いてください。", len: "長さ", menu: "受けたメニュー（この言葉は必ず自然に入れる）", visit: "来店回数", occ: "きっかけ", pts: "印象に残ったこと", area: "お店の場所（話の流れに合うときだけ触れる）", free: "お客様の一言（これが主役。口調を合わせる）", tail: "口コミ本文のみを出力してください。", sep: "、", areaText: "京都の二条駅・大宮駅の近く" },
+    en: { head: "Write one review.", len: "Length", menu: "Services received (these words must appear naturally)", visit: "Visits", occ: "Why I came", pts: "What stuck with me", area: "Location (mention only if it fits)", free: "Customer's own comment (the heart of the review — match its tone)", tail: "Output only the review body.", sep: ", ", areaText: "near Nijo and Omiya stations in Kyoto" },
+    ko: { head: "리뷰를 하나 써 주세요.", len: "길이", menu: "받은 시술(이 단어는 반드시 자연스럽게 포함)", visit: "방문 횟수", occ: "계기", pts: "기억에 남은 것", area: "가게 위치(흐름에 맞을 때만)", free: "손님 본인의 한마디(중심. 말투를 맞출 것)", tail: "리뷰 본문만 출력하세요.", sep: ", ", areaText: "교토 니조역·오미야역 근처" },
+    zh_cn: { head: "请写一则评价。", len: "长度", menu: "做的项目（这些词必须自然出现）", visit: "来店次数", occ: "来的原因", pts: "印象深的地方", area: "店的位置（顺口时才提）", free: "顾客自己的话（重点，语气要一致）", tail: "只输出评价正文。", sep: "、", areaText: "京都二条站、大宫站附近" },
+    zh_tw: { head: "請寫一則評論。", len: "長度", menu: "做的項目（這些詞必須自然出現）", visit: "來店次數", occ: "來的原因", pts: "印象深的地方", area: "店的位置（順口時才提）", free: "顧客自己的話（重點，語氣要一致）", tail: "只輸出評論本文。", sep: "、", areaText: "京都二條站、大宮站附近" },
+  }[lang];
 
-  if (lang === "ja") {
-    return `次の情報を基に、Googleマップの口コミを1つ書いてください。
-
-■ お店：${shop.name}（${shop.desc}）
-■ 来店回数：${d.visit || none}
-■ 今回のきっかけ：${d.occasion || none}
-■ 受けたメニュー：${list(d.menus, "、")}
-■ 良かった点：${list(d.points, "、")}
-${d.mustWords.length ? `■ 次の言葉は必ず本文に自然な形で入れる：${d.mustWords.join("、")}` : ""}
-${d.freeText ? `■ お客様自身の一言（意味を変えずに文中へ自然に取り込む）：${d.freeText}` : ""}
-
-口コミ本文のみを出力してください。`;
-  }
-
-  if (lang === "en") {
-    return `Write one Google Maps review based on the information below.
-
-- Shop: ${shop.name} (${shop.desc})
-- Visits: ${d.visit || none}
-- Reason for this visit: ${d.occasion || none}
-- Services received: ${list(d.menus, ", ")}
-- What was good: ${list(d.points, ", ")}
-${d.mustWords.length ? `- These words must appear naturally in the review: ${d.mustWords.join(", ")}` : ""}
-${d.freeText ? `- Customer's own words (keep the meaning, include naturally): ${d.freeText}` : ""}
-
-Output only the review body.`;
-  }
-
-  if (lang === "ko") {
-    return `아래 정보를 바탕으로 구글 지도 리뷰 한 편을 작성해 주세요.
-
-· 매장: ${shop.name} (${shop.desc})
-· 방문 횟수: ${d.visit || none}
-· 이번 방문 계기: ${d.occasion || none}
-· 받은 시술: ${list(d.menus, ", ")}
-· 좋았던 점: ${list(d.points, ", ")}
-${d.mustWords.length ? `· 다음 단어는 반드시 자연스럽게 포함: ${d.mustWords.join(", ")}` : ""}
-${d.freeText ? `· 손님 본인의 한마디(의미를 바꾸지 말고 자연스럽게 포함): ${d.freeText}` : ""}
-
-리뷰 본문만 출력하세요.`;
-  }
-
-  const isCn = lang === "zh_cn";
-  return `${isCn ? "请根据以下信息，写一则 Google 地图评价。" : "請根據以下資訊，寫一則 Google 地圖評論。"}
-
-・${isCn ? "店家" : "店家"}：${shop.name}（${shop.desc}）
-・${isCn ? "到访次数" : "到訪次數"}：${d.visit || none}
-・${isCn ? "这次来的原因" : "這次來的原因"}：${d.occasion || none}
-・${isCn ? "做的项目" : "做的項目"}：${list(d.menus, "、")}
-・${isCn ? "满意的地方" : "滿意的地方"}：${list(d.points, "、")}
-${d.mustWords.length ? `・${isCn ? "以下词语必须自然地出现在正文中" : "以下詞語必須自然地出現在正文中"}：${d.mustWords.join("、")}` : ""}
-${d.freeText ? `・${isCn ? "顾客自己的话（不改变意思，自然融入）" : "顧客自己的話（不改變意思，自然融入）"}：${d.freeText}` : ""}
-
-${isCn ? "只输出评价正文。" : "只輸出評論本文。"}`;
+  const shopLabel = { ja: "お店", en: "Shop", ko: "가게", zh_cn: "店名", zh_tw: "店名" }[lang];
+  const lines = [L.head, "", `- ${shopLabel}: ${SHOP[lang].name}`, `- ${L.len}: ${d.length}`, `- ${L.menu}: ${d.mustWords.join(L.sep)}`];
+  if (d.visit) lines.push(`- ${L.visit}: ${d.visit}`);
+  if (d.occasion) lines.push(`- ${L.occ}: ${d.occasion}`);
+  if (d.points.length) lines.push(`- ${L.pts}: ${d.points.join(L.sep)}`);
+  if (d.showArea) lines.push(`- ${L.area}: ${L.areaText}`);
+  if (d.freeText) lines.push(`- ${L.free}: ${d.freeText}`);
+  if (d.retryNote) lines.push("", d.retryNote);
+  lines.push("", L.tail);
+  return lines.join("\n");
 }
 
 // ===== ハンドラ本体（Vercel形式）=====
@@ -250,13 +297,21 @@ module.exports = async (req, res) => {
     ? body.freeText.replace(/[\r\n]+/g, " ").replace(/[<>]/g, "").trim().slice(0, MAX_FREETEXT_LENGTH)
     : "";
 
+  // 良かった点は最大2つだけ（全部盛り込むとチェックリストの読み上げになるため）
+  const chosenPoints = shuffle(pointIds).slice(0, 2);
+  // 地名は「駅から近い」を選んだ人か、4割くらいの確率でだけ渡す（毎回入ると不自然なため）
+  const showArea = !chosenPoints.includes("p5") && (pointIds.includes("p5") || Math.random() < 0.4);
+
   const data = {
-    visit: pickLabel(MASTER.visits[body.visit], lang),
-    occasion: pickLabel(MASTER.occasions[body.occasion], lang),
-    menus: unique(menuIds.map((id) => pickLabel(MASTER.menus[id], lang))),
-    points: unique(pointIds.map((id) => pickLabel(MASTER.points[id], lang))),
+    length: pickLength(lang),
+    // 来店回数・きっかけは半分くらいの確率で渡す（毎回書くと型にはまるため）
+    visit: Math.random() < 0.5 ? pickLabel(MASTER.visits[body.visit], lang) : null,
+    occasion: Math.random() < 0.5 ? pickLabel(MASTER.occasions[body.occasion], lang) : null,
+    points: unique(chosenPoints.map((id) => pickLabel(MASTER.points[id], lang))),
+    showArea,
     mustWords: unique(menuIds.map((id) => pickLabel(MASTER.mustWords[id], lang))),
     freeText,
+    retryNote: "",
   };
 
   if (!process.env.OPENAI_API_KEY) {
@@ -287,7 +342,13 @@ module.exports = async (req, res) => {
       const text = stripShopBrackets((completion.choices[0]?.message?.content || "").trim());
       if (!text) continue;
       review = text;
-      if (missingWords(review, data.mustWords).length === 0) break;
+      const missing = missingWords(review, data.mustWords);
+      const banned = bannedFound(review, lang);
+      if (missing.length === 0 && banned.length === 0) break;
+      // 次の書き直しで、何がだめだったかを伝える
+      data.retryNote = lang === "ja"
+        ? `前回の文章は使えませんでした。${missing.length ? `「${missing.join("」「")}」が入っていませんでした。` : ""}${banned.length ? `「${banned.join("」「")}」は使わないでください。` : ""}`
+        : `The previous draft was rejected.${missing.length ? ` Missing words: ${missing.join(", ")}.` : ""}${banned.length ? ` Do not use: ${banned.join(", ")}.` : ""}`;
     }
 
     if (!review) throw new Error("Empty completion");

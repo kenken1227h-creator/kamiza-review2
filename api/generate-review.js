@@ -17,23 +17,23 @@ const SHOP = {
 };
 
 const MASTER = {
+  // メニューは4つ：カット／フェード／パーマ／カラー
+  // （パーマは濡れパンを含む全種類、カラーはメッシュを含めて一括り。顔そりは扱わない）
   menus: {
-    m1: { ja: "メンズカット", en: "Men's Cut", ko: "남성 커트", zh_cn: "男士剪发", zh_tw: "男士剪髮" },
-    m2: { ja: "スキンフェード", en: "Skin Fade", ko: "스킨 페이드", zh_cn: "渐变理发", zh_tw: "漸層理髮" },
+    m1: { ja: "カット", en: "Haircut", ko: "커트", zh_cn: "剪发", zh_tw: "剪髮" },
+    m2: { ja: "フェード", en: "Fade", ko: "페이드", zh_cn: "渐变", zh_tw: "漸層" },
     m3: { ja: "カラー", en: "Color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
     m4: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
-    m5: { ja: "メッシュ", en: "Highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
-    // 濡れパンは口コミでは「パーマ」として書く（AIに「濡れパン」という言葉は渡さない）
-    m6: { ja: "パーマ", en: "Perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
-    m7: { ja: "顔そり", en: "Shave", ko: "면도", zh_cn: "修面", zh_tw: "修面" },
   },
-  // 選ばれたら口コミに必ず入れる言葉（フェード・パーマ・メッシュ）
+  // 選ばれたメニューは、この言葉を口コミに必ず入れる
   mustWords: {
+    m1: { ja: "カット", en: "cut", ko: "커트", zh_cn: "剪发", zh_tw: "剪髮" },
     m2: { ja: "フェード", en: "fade", ko: "페이드", zh_cn: "渐变", zh_tw: "漸層" },
+    m3: { ja: "カラー", en: "color", ko: "컬러", zh_cn: "染发", zh_tw: "染髮" },
     m4: { ja: "パーマ", en: "perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
-    m5: { ja: "メッシュ", en: "highlights", ko: "메쉬", zh_cn: "挑染", zh_tw: "挑染" },
-    m6: { ja: "パーマ", en: "perm", ko: "파마", zh_cn: "烫发", zh_tw: "燙髮" },
   },
+  // 古い画面（スマホに残った前のページ）から届く番号の読みかえ
+  legacyMenus: { m5: "m3", m6: "m4" },
   // 来店回数（文章の書き分けに使う）
   visits: {
     v1: { ja: "初めての来店", en: "first visit", ko: "첫 방문", zh_cn: "第一次来", zh_tw: "第一次來" },
@@ -142,6 +142,14 @@ const pickLabel = (entry, lang) => {
 
 const unique = (arr) => [...new Set(arr.filter(Boolean))];
 
+const MAX_ATTEMPTS = 3; // 最初の1回＋書き直し最大2回
+
+// 本文に入っていない「必ず入れる言葉」を返す（英語は大文字・小文字を区別しない）
+const missingWords = (text, words) => {
+  const t = text.toLowerCase();
+  return words.filter((w) => !t.includes(w.toLowerCase()));
+};
+
 // 店名のまわりの括弧を消す（AIが勝手につけた場合の保険）
 function stripShopBrackets(text) {
   const names = ["BAR BER SHOP 髪座", "BAR BER SHOP Kamiza", "BAR BER SHOP 카미자", "髪座", "Kamiza", "카미자"];
@@ -229,7 +237,9 @@ module.exports = async (req, res) => {
   body = body || {};
 
   const lang = LANGS.includes(body.language) ? body.language : "ja";
-  const menuIds = Array.isArray(body.menus) ? body.menus.filter((id) => MASTER.menus[id]) : [];
+  const menuIds = Array.isArray(body.menus)
+    ? unique(body.menus.map((id) => MASTER.legacyMenus[id] || id).filter((id) => MASTER.menus[id]))
+    : [];
   const pointIds = Array.isArray(body.points) ? body.points.filter((id) => MASTER.points[id]) : [];
 
   if (menuIds.length === 0) {
@@ -257,21 +267,28 @@ module.exports = async (req, res) => {
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPTS[lang] },
-        { role: "user", content: buildUserPrompt(lang, data) },
-      ],
-      temperature: 0.9,
-      top_p: 0.95,
-      presence_penalty: 0.6,
-      frequency_penalty: 0.3,
-      max_tokens: 600,
-    });
+    // AIが「必ず入れる言葉」を落とすことがあるので、
+    // 書き上がった文章を確認し、抜けていたら最大2回まで書き直させる
+    let review = "";
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPTS[lang] },
+          { role: "user", content: buildUserPrompt(lang, data) },
+        ],
+        temperature: 0.9,
+        top_p: 0.95,
+        presence_penalty: 0.6,
+        frequency_penalty: 0.3,
+        max_tokens: 600,
+      });
 
-    let review = (completion.choices[0]?.message?.content || "").trim();
-    review = stripShopBrackets(review);
+      const text = stripShopBrackets((completion.choices[0]?.message?.content || "").trim());
+      if (!text) continue;
+      review = text;
+      if (missingWords(review, data.mustWords).length === 0) break;
+    }
 
     if (!review) throw new Error("Empty completion");
 

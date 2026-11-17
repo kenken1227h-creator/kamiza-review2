@@ -5,42 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BAR BER SHOP 髪座 - ご来店アンケート</title>
 <style>
-  :root { --bg-color: #121212; --text-color: #f5f5f5; --accent-color: #d4af37; --box-bg: #242424; }
-  body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
-  .container { max-width: 500px; width: 100%; background-color: var(--box-bg); padding: 30px; border-radius: 8px; box-sizing: border-box; }
-  .lang-switch { text-align: right; margin-bottom: 20px; }
-  .lang-switch select { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; font-size: 14px; cursor: pointer; outline: none; }
-  h1 { text-align: center; color: var(--accent-color); letter-spacing: 2px; margin-top: 0; }
-  p.subtitle { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 24px; }
+  /* Appleっぽいデザイン：白ベース・余白多め・色は黒と髪座のゴールド1色だけ */
+  :root {
+    --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --sub: #6e6e73; --line: #d2d2d7;
+    --chip: #f5f5f7; --accent: #9a7a2e; --accent-soft: #f4ecd8;
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Helvetica Neue", "Noto Sans JP", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px 16px 40px; display: flex; justify-content: center; -webkit-font-smoothing: antialiased; }
+  .container { max-width: 480px; width: 100%; background: var(--card); padding: 36px 24px 32px; border-radius: 24px; box-sizing: border-box; box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+  .lang-switch { text-align: right; margin-bottom: 24px; }
+  .lang-switch select { appearance: none; -webkit-appearance: none; background: var(--chip); color: var(--text); border: none; padding: 8px 16px; border-radius: 999px; font-size: 13px; cursor: pointer; outline: none; }
+  h1 { text-align: center; color: var(--text); font-size: 26px; font-weight: 600; letter-spacing: 0.02em; margin: 0 0 6px; }
+  p.subtitle { text-align: center; font-size: 14px; color: var(--sub); margin: 0 0 32px; }
 
   /* 進み具合バー */
-  .progress-label { font-size: 12px; color: #aaa; margin-bottom: 6px; }
-  .progress { display: flex; gap: 6px; margin-bottom: 24px; }
-  .progress span { flex: 1; height: 4px; background: #444; border-radius: 2px; transition: 0.3s; }
-  .progress span.done { background: var(--accent-color); }
+  .progress-label { font-size: 12px; color: var(--sub); margin-bottom: 8px; }
+  .progress { display: flex; gap: 6px; margin-bottom: 32px; }
+  .progress span { flex: 1; height: 4px; background: #e8e8ed; border-radius: 2px; transition: background 0.3s; }
+  .progress span.done { background: var(--accent); }
 
   .step { display: none; }
-  .step.active { display: block; }
+  .step.active { display: block; animation: fade 0.3s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  .form-group { margin-bottom: 25px; }
-  label.section-title { display: block; font-weight: bold; margin-bottom: 12px; color: var(--accent-color); border-bottom: 1px solid #444; padding-bottom: 5px; }
-  .hint { font-size: 12px; color: #aaa; margin: -6px 0 10px; }
-
+  .form-group { margin-bottom: 32px; }
+  label.section-title { display: block; font-size: 19px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .hint { font-size: 13px; color: var(--sub); margin: 0 0 14px; }
 
   .options { display: flex; flex-wrap: wrap; gap: 10px; }
-  .option-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.3s; }
-  .option-btn.selected { background-color: var(--accent-color); color: #121212; font-weight: bold; }
-  textarea { width: 100%; background-color: #333; border: 1px solid #555; color: #fff; padding: 15px; border-radius: 4px; box-sizing: border-box; min-height: 80px; font-family: inherit; font-size: 16px; }
+  .option-btn { background: var(--chip); color: var(--text); border: 1px solid transparent; padding: 11px 18px; border-radius: 999px; cursor: pointer; font-size: 15px; transition: background 0.2s, color 0.2s, transform 0.1s; user-select: none; }
+  .option-btn:active { transform: scale(0.97); }
+  .option-btn.selected { background: var(--text); color: #fff; }
+  textarea { width: 100%; background: var(--chip); border: 1px solid transparent; color: var(--text); padding: 16px; border-radius: 16px; box-sizing: border-box; min-height: 96px; font-family: inherit; font-size: 16px; line-height: 1.6; outline: none; transition: border-color 0.2s, background 0.2s; resize: vertical; }
+  textarea:focus { background: #fff; border-color: var(--accent); }
 
-  .nav { display: flex; gap: 10px; margin-top: 10px; }
-  .back-btn { flex: 1; background: transparent; color: var(--text-color); border: 1px solid #555; padding: 18px; font-size: 16px; border-radius: 4px; cursor: pointer; }
-  .generate-btn { flex: 2; width: 100%; background-color: var(--text-color); color: var(--bg-color); border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; }
-  .generate-btn:disabled { background-color: #555; color: #999; cursor: default; }
-  .warn { color: #e57373; font-size: 13px; margin-top: 8px; min-height: 1em; }
+  .nav { display: flex; gap: 10px; margin-top: 8px; }
+  .back-btn { flex: 1; background: transparent; color: var(--text); border: 1px solid var(--line); padding: 16px; font-size: 16px; border-radius: 999px; cursor: pointer; }
+  .generate-btn { flex: 2; width: 100%; background: var(--text); color: #fff; border: none; padding: 16px; font-size: 16px; font-weight: 600; border-radius: 999px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+  .generate-btn:active, .back-btn:active, .copy-btn:active { transform: scale(0.98); }
+  .generate-btn:disabled { background: #d2d2d7; color: #fff; cursor: default; }
+  .warn { color: #d70015; font-size: 13px; margin-top: 10px; min-height: 1em; text-align: center; }
 
-  .result-area { display: none; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #555; }
-  .result-note { font-size: 12px; color: #aaa; margin: -6px 0 10px; line-height: 1.6; }
-  .copy-btn { width: 100%; background-color: var(--accent-color); color: #121212; border: none; padding: 18px; font-size: 16px; font-weight: bold; border-radius: 4px; margin-top: 15px; cursor: pointer; }
+  .result-area { display: none; margin-top: 36px; padding-top: 28px; border-top: 1px solid #e8e8ed; }
+  .result-note { font-size: 13px; color: var(--sub); margin: 0 0 14px; line-height: 1.6; }
+  .copy-btn { width: 100%; background: var(--accent); color: #fff; border: none; padding: 17px; font-size: 16px; font-weight: 600; border-radius: 999px; margin-top: 16px; cursor: pointer; }
 </style>
 </head>
 <body>

@@ -42,12 +42,16 @@ const MASTER = {
   },
   // 今回のきっかけ（文章の書き分けに使う）
   occasions: {
-    o1: { ja: "いつもの散髪", en: "a regular trim", ko: "평소처럼 다듬으러", zh_cn: "平常修剪", zh_tw: "平常修剪" },
-    o2: { ja: "仕事や就活の前に整えたくて", en: "wanted to look sharp before work or job hunting", ko: "일이나 취업 준비 전에 정리하려고", zh_cn: "工作或求职前想整理一下", zh_tw: "工作或求職前想整理一下" },
-    o3: { ja: "イベントや結婚式の前に", en: "getting ready for an event or a wedding", ko: "행사나 결혼식 앞두고", zh_cn: "活动或婚礼前", zh_tw: "活動或婚禮前" },
-    o4: { ja: "気分を変えたくて", en: "wanted a change", ko: "기분 전환하고 싶어서", zh_cn: "想换个心情", zh_tw: "想換個心情" },
+    o1: { ja: "髪が伸びてきたから", en: "my hair had grown out", ko: "머리가 길어져서", zh_cn: "头发长长了", zh_tw: "頭髮長長了" },
+    o2: { ja: "仕事や就活に向けて整えたくて", en: "wanted to look sharp for work or job hunting", ko: "일이나 취업 준비 때문에 정리하려고", zh_cn: "为了工作或求职想整理一下", zh_tw: "為了工作或求職想整理一下" },
     o5: { ja: "旅行中に立ち寄った", en: "stopped by while traveling", ko: "여행 중에 들름", zh_cn: "旅行途中顺路来", zh_tw: "旅行途中順路來" },
+    o6: { ja: "イメチェンしたくて", en: "wanted a new look", ko: "이미지 변신하고 싶어서", zh_cn: "想换个造型", zh_tw: "想換個造型" },
+    o7: { ja: "大切な予定の前に整えたくて", en: "wanted to tidy up before something important", ko: "중요한 일정 앞두고 정리하려고", zh_cn: "重要安排前想整理一下", zh_tw: "重要行程前想整理一下" },
   },
+  // 古い画面から届くきっかけの番号の読みかえ（結婚式・イベント→大切な予定。気分転換は使わない）
+  legacyOccasions: { o3: "o7" },
+
+
   // 良かった点（お店の言い方ではなく、お客様が話すときの言い方で渡す。毎回1つを選ぶ）
   points: {
     p1: {
@@ -319,7 +323,7 @@ module.exports = async (req, res) => {
     length: pickLength(lang),
     // 来店回数・きっかけは半分くらいの確率で渡す（毎回書くと型にはまるため）
     visit: Math.random() < 0.5 ? pickLabel(MASTER.visits[body.visit], lang) : null,
-    occasion: Math.random() < 0.5 ? pickLabel(MASTER.occasions[body.occasion], lang) : null,
+    occasion: Math.random() < 0.5 ? pickLabel(MASTER.occasions[MASTER.legacyOccasions[body.occasion] || body.occasion], lang) : null,
     points: unique(chosenPoints.map((id) => pickLabel(MASTER.points[id], lang))),
     showArea,
     mustWords: unique(menuIds.map((id) => pickLabel(MASTER.mustWords[id], lang))),

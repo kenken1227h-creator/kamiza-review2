@@ -114,7 +114,7 @@ const LENGTH_WEIGHTS = [0.45, 0.4, 0.15];
 
 // ===== AIがやりがちな言い回し（入っていたら書き直させる）=====
 const BANNED = {
-  ja: ["お世話になっ", "大満足", "心地よ", "はもちろん", "おすすめです", "オススメです", "ぜひ", "利用したいと思います", "通い続けたい", "リラックスできる時間", "本当に感謝", "アクセスしやすい", "丁寧なカウンセリング", "希望通りの仕上がり", "素晴らしい", "結論として", "総じて"],
+  ja: ["お世話になっ", "大満足", "心地よ", "はもちろん", "おすすめです", "オススメです", "ぜひ", "利用したいと思います", "通い続けたい", "リラックスできる時間", "本当に感謝", "アクセスしやすい", "丁寧なカウンセリング", "希望通りの仕上がり", "素晴らしい", "結論として", "総じて", "スタイリスト", "ちゃった", "ウトウト", "ほんとに"],
   en: ["highly recommend", "top-notch", "exceeded my expectations", "look no further", "hidden gem", "impeccable", "a must-visit"],
   ko: ["강력 추천", "최고의 경험", "기대 이상"],
   zh_cn: ["强烈推荐", "超出预期", "宝藏"],
@@ -126,12 +126,15 @@ const SYSTEM_PROMPTS = {
   ja: `あなたは、京都の理容室で髪を切ってもらったばかりのお客様です。帰り道にスマホで、Googleマップに口コミをさっと書きます。
 
 【書き方】
-- 文章をうまく書こうとしない。友だちに話すくらいの温度で、思ったことをそのまま書く
+- 書き手は、ごく普通の男性のお客様。落ち着いた、あっさりした文体で書く
+- 基本は「です・ます」か、そっけないくらいの普通の言い切り（「〜だった」「〜と思う」）
+- 「！」は使っても1回まで。「〜しちゃった」「〜だな！」「ほんとに」など、甘えた感じや大げさなノリの言い回しはしない
 - 渡された材料を全部使わなくていい。印象に残ったことを1〜2個だけ書く
-- 「お客様の一言」があるときは、それが主役。口調・テンション・ノリ（ため口、ふざけ、丁寧など）を一言に合わせて、文章全体を書く。一言はほぼそのまま使い、浮かないようにつなげる
-- 一言がないときは、普通の人のくだけた「です・ます」か、ため口のどちらか
+- 「お客様の一言」があるときは、その内容を文章の中心にする。言葉はほぼそのまま地の文として使い、かぎ括弧（「」『』""）で囲まない
+- 一言がくだけていても、文章全体は普通の大人の口コミの範囲でくだけさせる程度にする
 - 長さは指定に従う。短いときは改行しない
-- 渡された情報だけで書く。受けていない施術や、なかった出来事を作らない
+- 渡された情報だけで書く。受けていない施術、なかった出来事、気持ちの描写（寝てしまった、感動した等）を作らない
+- 担当者を書くときは「担当の方」「店員さん」などにする。「スタイリストさん」とは書かない
 
 【使わない言い回し】
 - 「いつもお世話になっています」などのビジネスメールの書き出し
@@ -227,8 +230,18 @@ const pickLength = (lang) => {
 // 使ってはいけない言い回しが入っていないか
 const bannedFound = (text, lang) => {
   const t = text.toLowerCase();
-  return (BANNED[lang] || []).filter((w) => t.includes(w.toLowerCase()));
+  const found = (BANNED[lang] || []).filter((w) => t.includes(w.toLowerCase()));
+  // 日本語は「！」の多用もはねる（ノリが軽くなりすぎるため）
+  if (lang === "ja" && (text.match(/[！!]/g) || []).length > 1) found.push("！を2回以上");
+  return found;
 };
+
+// かぎ括弧・引用符を外す（お客様の一言を「」で囲むなど、普通の口コミでは不自然なため）
+function stripQuotes(text) {
+  return text
+    .replace(/[「『]([^「」『』\n]{1,60})[」』]/g, "$1")
+    .replace(/[“"]([^“”"\n]{1,60})[”"]/g, "$1");
+}
 
 // 本文に入っていない「必ず入れる言葉」を返す（英語は大文字・小文字を区別しない）
 const missingWords = (text, words) => {
@@ -251,7 +264,7 @@ function stripShopBrackets(text) {
 // 材料は「使ってもいい情報」として渡し、全部を盛り込ませない
 function buildUserPrompt(lang, d) {
   const L = {
-    ja: { head: "口コミを1つ書いてください。", len: "長さ", menu: "受けたメニュー（この言葉は必ず自然に入れる）", visit: "来店回数", occ: "きっかけ", pts: "印象に残ったこと", area: "お店の場所（話の流れに合うときだけ触れる）", free: "お客様の一言（これが主役。口調を合わせる）", tail: "口コミ本文のみを出力してください。", sep: "、", areaText: "京都の二条駅・大宮駅の近く" },
+    ja: { head: "口コミを1つ書いてください。", len: "長さ", menu: "受けたメニュー（この言葉は必ず自然に入れる）", visit: "来店回数", occ: "きっかけ", pts: "印象に残ったこと", area: "お店の場所（話の流れに合うときだけ触れる）", free: "お客様の一言（文章の中心にする。かぎ括弧で囲まない）", tail: "口コミ本文のみを出力してください。", sep: "、", areaText: "京都の二条駅・大宮駅の近く" },
     en: { head: "Write one review.", len: "Length", menu: "Services received (these words must appear naturally)", visit: "Visits", occ: "Why I came", pts: "What stuck with me", area: "Location (mention only if it fits)", free: "Customer's own comment (the heart of the review — match its tone)", tail: "Output only the review body.", sep: ", ", areaText: "near Nijo and Omiya stations in Kyoto" },
     ko: { head: "리뷰를 하나 써 주세요.", len: "길이", menu: "받은 시술(이 단어는 반드시 자연스럽게 포함)", visit: "방문 횟수", occ: "계기", pts: "기억에 남은 것", area: "가게 위치(흐름에 맞을 때만)", free: "손님 본인의 한마디(중심. 말투를 맞출 것)", tail: "리뷰 본문만 출력하세요.", sep: ", ", areaText: "교토 니조역·오미야역 근처" },
     zh_cn: { head: "请写一则评价。", len: "长度", menu: "做的项目（这些词必须自然出现）", visit: "来店次数", occ: "来的原因", pts: "印象深的地方", area: "店的位置（顺口时才提）", free: "顾客自己的话（重点，语气要一致）", tail: "只输出评价正文。", sep: "、", areaText: "京都二条站、大宫站附近" },
@@ -339,7 +352,7 @@ module.exports = async (req, res) => {
         max_tokens: 600,
       });
 
-      const text = stripShopBrackets((completion.choices[0]?.message?.content || "").trim());
+      const text = stripQuotes(stripShopBrackets((completion.choices[0]?.message?.content || "").trim()));
       if (!text) continue;
       review = text;
       const missing = missingWords(review, data.mustWords);
